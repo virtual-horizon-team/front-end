@@ -27,7 +27,6 @@ export const LoginForm = () => {
             setMessage(result);
 
             if (result.success) {
-                // Give the user a moment to see the success message
                 setTimeout(() => {
                     router.push("/");
                     router.refresh();

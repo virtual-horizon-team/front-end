@@ -10,8 +10,14 @@ export async function refreshSession() {
 
     try {
         const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/Auth/Refresh?refreshToken=${encodeURIComponent(refreshToken)}`,
-            { method: "POST" }
+            `${process.env.NEXT_PUBLIC_API_URL}/api/Auth/Refresh`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(refreshToken),
+            }
         );
 
         if (!response.ok) throw new Error("Refresh failed");
@@ -34,8 +40,10 @@ export async function refreshSession() {
             expires: new Date(data.refreshTokenExpirationInDays),
         });
 
+        console.log("Token refreshed successfully")
         return data.accessToken;
     } catch (error) {
+        console.log("Error refreshing token:", error)
         cookieStore.delete("access_token");
         cookieStore.delete("refresh_token");
         return null;
