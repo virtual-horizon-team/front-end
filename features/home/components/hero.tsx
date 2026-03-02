@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-
-export default function Hero() {
+import { getSession } from "@/features/auth/lib/get-session";
+export default async function Hero() {
+    const session = await getSession();
     return (
         <div className="flex flex-wrap items-center justify-center min-h-screen w-full  relative overflow-hidden">
             <div className=" p-10 md:p-4 md:max-w-xl">
@@ -12,9 +13,12 @@ export default function Hero() {
                     <p className="">
                         We combine immersive virtual reality with real-world technical training to transform how skills are built. No classrooms. No limitations. Just powerful, experience-based learning.
                     </p>
-                    <Link href="/register" className="text-white  px-6 py-2 text-[21px] hover:text-gray-500 cursor-pointer bg-gradient-to-r from-[#6E27E0] to-[#460F9E] rounded-xl m-2 p-2 w-48 text-center font-semibold">
+                    {session ? (
+                        null
+
+                    ) : <Link href="/register" className="text-white  px-6 py-2 text-[21px] hover:text-gray-500 cursor-pointer bg-gradient-to-r from-[#6E27E0] to-[#460F9E] rounded-xl m-2 p-2 w-48 text-center font-semibold">
                         Get Started
-                    </Link>
+                    </Link>}
                 </div>
             </div>
             <div className="relative flex items-center justify-center opacity-80">
