@@ -15,7 +15,6 @@ export default async function Hero() {
                     </p>
                     {session ? (
                         null
-
                     ) : <Link href="/register" className="text-white  px-6 py-2 text-[21px] hover:text-gray-500 cursor-pointer bg-gradient-to-r from-[#6E27E0] to-[#460F9E] rounded-xl m-2 p-2 w-48 text-center font-semibold">
                         Get Started
                     </Link>}
