@@ -148,7 +148,6 @@ export interface Quiz {
 * Hooks → `useSomething`
 * Services → `something.service.ts`
 * Types → `something.ts`
-
 ---
 
 ## 8. Environment Variables
