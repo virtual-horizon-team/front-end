@@ -12,7 +12,6 @@ import { LoginSchema, LoginInput } from "../schemas/login-schema";
 import { RegisterSchema, RegisterInput } from "../schemas/register-schema";
 import { loginUser } from "../actions/login";
 import { registerUser } from "../actions/register";
-import { Country } from "@/domain/enums";
 
 export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | "register" }) {
     const router = useRouter();
