@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://backend-production-c723.up.railway.app";
+import { API_BASE_URL as BASE_URL } from "@/lib/config";
 
 interface ServerApiOptions {
     method?: string;
@@ -17,7 +17,8 @@ export async function serverApi<T>(
     const id = setTimeout(() => controller.abort(), timeout);
 
     try {
-        const response = await fetch(`${BASE_URL}${endpoint}`, {
+        const url = `${BASE_URL.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
+        const response = await fetch(url, {
             method,
             body,
             headers: {
@@ -30,6 +31,11 @@ export async function serverApi<T>(
         clearTimeout(id);
 
         const data = await response.json().catch(() => ({}));
+
+        if (response.status === 403) {
+            const { redirect } = await import("next/navigation");
+            redirect("/forbidden");
+        }
 
         if (!response.ok) {
             const errorMessage =

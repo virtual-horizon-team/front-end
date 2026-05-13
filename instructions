@@ -1,0 +1,306 @@
+# 📘 Next.js Project Architecture Guidelines (Graduation Project)
+
+## 1. General Principles
+
+* Follow **Separation of Concerns**
+* Keep **UI, business logic, and API communication separated**
+* Use **modular, feature-based structure**
+* Avoid tight coupling with backend implementation
+* Code must be **readable, testable, and maintainable**
+
+---
+
+## 2. Project Structure (Feature-Based)
+
+```
+src/
+│
+├── app/                    # Next.js App Router (pages & layouts)
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── (features)/
+│       └── quizzes/
+│           ├── page.tsx
+│           └── [id]/page.tsx
+│
+├── features/              # Business features (IMPORTANT)
+│   ├── quizzes/
+│   │   ├── components/
+│   │   ├── services/
+│   │   ├── hooks/
+│   │   ├── types/
+│   │   └── utils/
+│   │
+│   └── auth/
+│
+├── shared/                # Reusable across app
+│   ├── components/
+│   ├── hooks/
+│   ├── utils/
+│   └── types/
+│
+├── lib/                   # Core configs (API, axios, etc.)
+│   ├── api-client.ts
+│   └── constants.ts
+│
+├── styles/                # Global styles
+│
+└── middleware.ts          # Auth / request middleware
+```
+
+---
+
+## 3. API Communication Layer
+
+### Rule:
+
+**All API calls must be centralized**
+
+Example:
+
+```ts
+// src/lib/api-client.ts
+import axios from "axios";
+
+export const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+});
+```
+
+---
+
+### Feature Service Example:
+
+```ts
+// features/quizzes/services/quiz.service.ts
+import { apiClient } from "@/lib/api-client";
+
+export const getQuizzes = async () => {
+  const res = await apiClient.get("/quizzes");
+  return res.data;
+};
+```
+
+---
+
+## 4. Component Structure
+
+### Rules:
+
+* Keep components **small and reusable**
+* Separate:
+
+  * UI components
+  * Logic (hooks)
+
+---
+
+### Example:
+
+```
+features/quizzes/components/
+  QuizCard.tsx
+  QuizList.tsx
+```
+
+---
+
+## 5. Custom Hooks (Logic Layer)
+
+Move logic out of components:
+
+```ts
+// features/quizzes/hooks/useQuizzes.ts
+import { useEffect, useState } from "react";
+import { getQuizzes } from "../services/quiz.service";
+
+export const useQuizzes = () => {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    getQuizzes().then(setData);
+  }, []);
+
+  return { data };
+};
+```
+
+---
+
+## 6. Types & DTOs
+
+* Define types per feature
+* Match your .NET DTOs
+
+```ts
+// features/quizzes/types/quiz.ts
+export interface Quiz {
+  id: string;
+  title: string;
+}
+```
+
+---
+
+## 7. Naming Conventions
+
+* Components → `PascalCase`
+* Hooks → `useSomething`
+* Services → `something.service.ts`
+* Types → `something.ts`
+
+---
+
+## 8. Environment Variables
+
+```
+.env.local
+
+NEXT_PUBLIC_API_URL=https://your-api.com/api
+```
+
+---
+
+## 9. State Management
+
+Start simple:
+
+* Local state (`useState`)
+* Server state → use libraries like:
+
+  * React Query (recommended)
+
+Avoid:
+
+* Global state unless necessary
+
+---
+
+## 10. Styling Approach
+
+Choose one:
+
+* Tailwind CSS (recommended)
+* CSS Modules
+
+Keep styles:
+
+* Close to components
+* Not global unless necessary
+
+---
+
+## 11. Do NOT Do These Mistakes
+
+❌ Call API directly inside components
+❌ Mix UI with business logic
+❌ Put everything in one folder
+❌ Duplicate API logic
+❌ Ignore typing
+
+---
+
+## 12. Scalability Rules
+
+When adding a new feature:
+
+1. Create a new folder inside `features/`
+2. Add:
+
+   * components/
+   * services/
+   * hooks/
+   * types/
+3. Keep it isolated
+
+---
+
+## 13. Integration with .NET Backend
+
+* Use REST endpoints only
+* No business logic in frontend
+* Handle:
+
+  * Authentication (JWT)
+  * Errors properly
+
+---
+
+## 14. Optional Advanced Improvements
+
+* Add loading & error states
+* Add global error handler
+* Use interceptors in axios
+* Add caching (React Query)
+
+---
+
+# Frontend Development Rules (STRICT)
+
+## 1. API Usage Rules
+
+* DO NOT assume any endpoint.
+* DO NOT create fake request/response structures.
+* Before calling ANY API, you MUST ask for:
+
+  1. Endpoint URL
+  2. HTTP Method (GET, POST, etc.)
+  3. Request body الشكل
+  4. Response الشكل (exact JSON)
+  5. Authentication requirements (token? headers?)
+
+## 2. If API is Missing
+
+If an endpoint is not provided:
+
+* Ask clearly:
+  "Please provide the API contract for this feature"
+* DO NOT continue implementation until API is واضح.
+
+## 3. Response Handling
+
+* Always define TypeScript interfaces based on real response.
+* Do not guess field names.
+* Example:
+  ❌ wrong: { name, email }
+  ✅ correct: based on backend response only
+
+## 4. API Layer Separation
+
+* All API calls MUST be inside `/api/services`
+* UI must NEVER call fetch/axios directly
+
+## 5. Error Handling
+
+* Always handle:
+
+  * loading
+  * error
+  * success states
+
+## 6. Naming Convention
+
+* API functions:
+  getUsers, createQuiz, submitAnswer
+* Files:
+  feature.service.ts
+
+## 7. Before Implementing ANY Feature
+
+You MUST ask:
+"What is the API endpoint and response for this feature?"
+
+## 8. If Backend Not Ready
+
+* Ask for mock response JSON
+* Use it temporarily with clear comment
+
+## 9. Forbidden Actions
+
+* ❌ No hardcoded API URLs
+* ❌ No guessing fields
+* ❌ No skipping API validation step
+
+## 10. Expected Behavior
+
+You behave like a strict frontend engineer working with backend contract-first approach.

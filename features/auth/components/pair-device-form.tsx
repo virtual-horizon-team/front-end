@@ -29,7 +29,7 @@ export const PairDeviceForm = () => {
     };
 
     return (
-        <div className="w-full max-w-md mx-auto p-8 rounded-2xl bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/20 shadow-2xl transition-all duration-300 hover:shadow-blue-500/10">
+        <div className="w-full max-w-md mx-auto p-8 rounded-xl bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/20 shadow-2xl transition-all duration-300 hover:shadow-blue-500/10">
             <div className="text-center mb-8">
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
                     Pair Your Device

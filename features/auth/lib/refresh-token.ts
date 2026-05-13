@@ -1,16 +1,22 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { API_BASE_URL } from "@/lib/config";
 
 export async function refreshSession() {
     const cookieStore = await cookies();
     const refreshToken = cookieStore.get("refresh_token")?.value;
 
-    if (!refreshToken) return null;
+    if (!refreshToken) {
+        console.log("[Refresh] No refresh_token cookie found");
+        return null;
+    }
 
     try {
+        const baseUrl = API_BASE_URL;
+        console.log(`[Refresh] Attempting refresh at ${baseUrl}/api/Auth/Refresh`);
         const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/Auth/Refresh`,
+            `${baseUrl}/api/Auth/Refresh`,
             {
                 method: "POST",
                 headers: {
@@ -20,7 +26,8 @@ export async function refreshSession() {
             }
         );
 
-        if (!response.ok) throw new Error("Refresh failed");
+        console.log(`[Refresh] Response status: ${response.status}`);
+        if (!response.ok) throw new Error(`Refresh failed with status ${response.status}`);
 
         const data = await response.json();
 

@@ -12,6 +12,8 @@ export const loginUser = async (values: LoginInput) => {
     }
 
     try {
+        const { rememberMe, ...apiPayload } = validatedFields.data;
+
         const response = await api<{
             accessToken: string;
             refreshToken: string;
@@ -21,7 +23,7 @@ export const loginUser = async (values: LoginInput) => {
             refreshTokenExpirationInDays: string;
         }>("/api/Auth/Login", {
             method: "POST",
-            body: JSON.stringify(validatedFields.data),
+            body: JSON.stringify(apiPayload),
         });
 
         const cookieStore = await cookies();
@@ -31,7 +33,7 @@ export const loginUser = async (values: LoginInput) => {
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
             path: "/",
-            expires: new Date(response.accessTokenExpirationInMinutes)
+            ...(rememberMe ? { expires: new Date(response.accessTokenExpirationInMinutes) } : {})
         });
 
         cookieStore.set("refresh_token", response.refreshToken, {
@@ -39,12 +41,12 @@ export const loginUser = async (values: LoginInput) => {
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
             path: "/",
-            expires: new Date(response.refreshTokenExpirationInDays)
+            ...(rememberMe ? { expires: new Date(response.refreshTokenExpirationInDays) } : {})
         });
 
         return { success: "Logged in successfully!", data: response };
 
     } catch (error: any) {
-        return { error: error.message || "Invalid credentials" };
+        return { error: "Incorrect username or password" };
     }
 };
