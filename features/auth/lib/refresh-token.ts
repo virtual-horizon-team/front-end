@@ -16,7 +16,7 @@ export async function refreshSession() {
         const baseUrl = API_BASE_URL;
         console.log(`[Refresh] Attempting refresh at ${baseUrl}/api/Auth/Refresh`);
         const response = await fetch(
-            `${baseUrl}/api/Auth/Refresh`,
+            `${baseUrl.replace(/\/$/, "")}/api/Auth/Refresh`,
             {
                 method: "POST",
                 headers: {
