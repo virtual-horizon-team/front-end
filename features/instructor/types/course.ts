@@ -94,7 +94,8 @@ export interface CourseListResult {
 export interface CategoryTreeNode {
     id: string;
     name: string;
-    parentId: string | null;
+    slug?: string;
+    parentId?: string | null;
     children: CategoryTreeNode[];
 }
 

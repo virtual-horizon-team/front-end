@@ -1,14 +1,69 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSession } from "./features/auth/lib/get-session";
+import { jwtDecode } from "jwt-decode";
+
+interface DecodedToken {
+    sub?: string;
+    email?: string;
+    exp?: number;
+    roles?: string | string[];
+    role?: string | string[];
+    "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"?: string | string[];
+    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role"?: string | string[];
+}
+
+/**
+ * Robustly extracts roles from any SOAP namespace claim structure in JWT tokens.
+ */
+function getUserRolesFromToken(token: string): string[] {
+    if (!token) return [];
+    try {
+        const decoded = jwtDecode<DecodedToken>(token);
+        const rawRoles = 
+            decoded.roles || 
+            decoded.role || 
+            decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ||
+            decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role"];
+
+        if (!rawRoles) return [];
+
+        if (Array.isArray(rawRoles)) {
+            return rawRoles.map(r => r.toLowerCase());
+        }
+
+        if (typeof rawRoles === "string") {
+            if (rawRoles.includes(",")) {
+                return rawRoles.split(",").map(r => r.trim().toLowerCase());
+            }
+            return [rawRoles.trim().toLowerCase()];
+        }
+
+        return [];
+    } catch (e) {
+        return [];
+    }
+}
 
 export async function middleware(request: NextRequest) {
     const session = await getSession();
     const isAuthPage = request.nextUrl.pathname.startsWith("/login") ||
         request.nextUrl.pathname.startsWith("/register");
+    const isAdminPage = request.nextUrl.pathname.startsWith("/admin");
 
-    // If we have a valid session, allow the request
     if (session) {
+        // Enforce administrative checks at the edge using access token claims
+        if (isAdminPage) {
+            const token = request.cookies.get("access_token")?.value || "";
+            const roles = getUserRolesFromToken(token);
+            const isAdmin = roles.includes("admin");
+
+            if (!isAdmin) {
+                // Return a standard 404 response redirect instead of revealing endpoint existence via /forbidden
+                return NextResponse.redirect(new URL("/404", request.url));
+            }
+        }
+
         // Redirect away from auth pages if logged in
         if (isAuthPage) {
             return NextResponse.redirect(new URL("/", request.url));
@@ -36,5 +91,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ["/", "/dashboard/:path*", "/instructor/:path*", "/pair-device", "/login", "/register"],
+    matcher: ["/", "/dashboard/:path*", "/instructor/:path*", "/admin/:path*", "/pair-device", "/login", "/register"],
 };

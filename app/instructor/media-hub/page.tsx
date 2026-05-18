@@ -1,11 +1,32 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Upload, Search, Filter, Film, FileText, MoreVertical, Trash2, Eye, Download, ChevronLeft, ChevronRight, Video, FileQuestion, Gamepad2, FileBox, FileSpreadsheet, Presentation, AlertTriangle } from "lucide-react";
+import { 
+    Upload, 
+    Search, 
+    Filter, 
+    Film, 
+    FileText, 
+    MoreVertical, 
+    Trash2, 
+    Eye, 
+    Download, 
+    ChevronLeft, 
+    ChevronRight, 
+    Video, 
+    FileQuestion, 
+    Gamepad2, 
+    FileBox, 
+    FileSpreadsheet, 
+    Presentation, 
+    AlertTriangle,
+    Loader2
+} from "lucide-react";
 import { videoApi } from "../../../features/instructor/lib/video-api";
 import { ResourceResult, ResourceType, ResourceResultPagedResult } from "../../../features/instructor/types/video";
 import UploadMediaModal from "../../../features/instructor/components/UploadMediaModal";
 import VideoPreviewModal from "../../../features/instructor/components/VideoPreviewModal";
+import DocumentPreviewModal from "../../../features/admin/components/DocumentPreviewModal";
 import { documentApi } from "../../../features/instructor/lib/document-api";
 
 export default function MediaHubPage() {
@@ -23,8 +44,29 @@ export default function MediaHubPage() {
     // Modals
     const [isUploadOpen, setIsUploadOpen] = useState(false);
     const [previewVideo, setPreviewVideo] = useState<{ id: string, title: string } | null>(null);
+    
+    // Generic Document Preview states
+    const [previewDoc, setPreviewDoc] = useState<{ url: string, title: string, mimeType: string, sizeBytes?: number } | null>(null);
+    const [loadingPreviewId, setLoadingPreviewId] = useState<string | null>(null);
+
     const [itemToDelete, setItemToDelete] = useState<{ id: string, title: string } | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Revoke object URL on close or unmount to prevent memory leaks
+    const handleClosePreview = () => {
+        if (previewDoc?.url) {
+            window.URL.revokeObjectURL(previewDoc.url);
+        }
+        setPreviewDoc(null);
+    };
+
+    useEffect(() => {
+        return () => {
+            if (previewDoc?.url) {
+                window.URL.revokeObjectURL(previewDoc.url);
+            }
+        };
+    }, [previewDoc?.url]);
 
     const formatBytes = (bytes: number) => {
         if (bytes === 0) return "0 B";
@@ -310,37 +352,67 @@ export default function MediaHubPage() {
                                                 {item.type === ResourceType.Video && item.status !== 'Failed' && item.mediaId && (
                                                     <button 
                                                         onClick={() => setPreviewVideo({ id: item.mediaId as string, title: item.title || "Video Preview" })}
-                                                        className="p-1.5 text-brand-muted hover:text-brand-primary hover:bg-brand-soft rounded bg-white shadow-sm border border-brand-border"
+                                                        className="p-1.5 text-brand-muted hover:text-brand-primary hover:bg-brand-soft rounded bg-white shadow-sm border border-brand-border cursor-pointer"
                                                         title="Preview"
                                                     >
                                                         <Eye size={16} />
                                                     </button>
                                                 )}
                                                 {item.type === ResourceType.Document && item.status !== 'Failed' && item.mediaId && (
-                                                    <button 
-                                                        onClick={async () => {
-                                                            try {
-                                                                const url = await documentApi.getDocumentDownloadUrl(item.mediaId as string);
-                                                                const a = document.createElement('a');
-                                                                a.href = url;
-                                                                a.download = item.title || 'document';
-                                                                document.body.appendChild(a);
-                                                                a.click();
-                                                                document.body.removeChild(a);
-                                                            } catch (err) {
-                                                                console.error("Failed to download document", err);
-                                                                alert("Failed to download document");
-                                                            }
-                                                        }}
-                                                        className="p-1.5 text-brand-muted hover:text-blue-600 hover:bg-blue-50 rounded bg-white shadow-sm border border-brand-border"
-                                                        title="Download"
-                                                    >
-                                                        <Download size={16} />
-                                                    </button>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <button 
+                                                            onClick={async () => {
+                                                                setLoadingPreviewId(item.resourceId);
+                                                                try {
+                                                                    const url = await documentApi.getDocumentDownloadUrl(item.mediaId as string);
+                                                                    setPreviewDoc({
+                                                                        url,
+                                                                        title: item.title || "Document Preview",
+                                                                        mimeType: item.mimeType || "application/pdf",
+                                                                        sizeBytes: item.sizeBytes
+                                                                    });
+                                                                } catch (err) {
+                                                                    console.error("Failed to preview document", err);
+                                                                    alert("Failed to load document preview");
+                                                                } finally {
+                                                                    setLoadingPreviewId(null);
+                                                                }
+                                                            }}
+                                                            disabled={loadingPreviewId !== null}
+                                                            className="p-1.5 text-brand-muted hover:text-brand-primary hover:bg-brand-soft rounded bg-white shadow-sm border border-brand-border cursor-pointer disabled:opacity-50"
+                                                            title="Preview"
+                                                        >
+                                                            {loadingPreviewId === item.resourceId ? (
+                                                                <Loader2 size={16} className="animate-spin text-brand-primary" />
+                                                            ) : (
+                                                                <Eye size={16} />
+                                                            )}
+                                                        </button>
+                                                        <button 
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const url = await documentApi.getDocumentDownloadUrl(item.mediaId as string);
+                                                                    const a = document.createElement('a');
+                                                                    a.href = url;
+                                                                    a.download = item.title || 'document';
+                                                                    document.body.appendChild(a);
+                                                                    a.click();
+                                                                    document.body.removeChild(a);
+                                                                } catch (err) {
+                                                                    console.error("Failed to download document", err);
+                                                                    alert("Failed to download document");
+                                                                }
+                                                            }}
+                                                            className="p-1.5 text-brand-muted hover:text-blue-600 hover:bg-blue-50 rounded bg-white shadow-sm border border-brand-border cursor-pointer"
+                                                            title="Download"
+                                                        >
+                                                            <Download size={16} />
+                                                        </button>
+                                                    </div>
                                                 )}
                                                 <button 
                                                     onClick={() => setItemToDelete({ id: item.resourceId, title: item.title || "Untitled" })}
-                                                    className="p-1.5 text-brand-muted hover:text-red-600 hover:bg-red-50 rounded bg-white shadow-sm border border-brand-border"
+                                                    className="p-1.5 text-brand-muted hover:text-red-600 hover:bg-red-50 rounded bg-white shadow-sm border border-brand-border cursor-pointer"
                                                     title="Delete"
                                                 >
                                                     <Trash2 size={16} />
@@ -409,12 +481,23 @@ export default function MediaHubPage() {
                 />
             )}
 
-            {/* Preview Modal */}
+            {/* Video Preview Modal */}
             {previewVideo && (
                 <VideoPreviewModal 
                     videoId={previewVideo.id} 
                     title={previewVideo.title} 
                     onClose={() => setPreviewVideo(null)} 
+                />
+            )}
+
+            {/* Document Preview Modal */}
+            {previewDoc && (
+                <DocumentPreviewModal 
+                    previewUrl={previewDoc.url} 
+                    fileName={previewDoc.title}
+                    mimeType={previewDoc.mimeType}
+                    fileSizeBytes={previewDoc.sizeBytes}
+                    onClose={handleClosePreview}
                 />
             )}
 
