@@ -1,32 +1,35 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f3f4f6;
+  --foreground: #1f2937;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-epilogue);
+  --font-epilogue: var(--font-epilogue);
+  --font-inter: var(--font-inter);
 
-  /* Brand Theme Custom Colors */
-  --color-brand-primary: #5B6EF5;
-  --color-brand-hover: #4C5CE0;
-  --color-brand-navy: #071437;
-  --color-brand-bg: #F8FAFC;
-  --color-brand-soft: #EEF2FF;
-  --color-brand-border: #E5E7EB;
-  --color-brand-text: #071437;
-  --color-brand-muted: #64748B;
+  /* Brand Theme Custom Colors - Cool Slate & Crimson (Alternative 2) */
+  --color-brand-primary: #a30014;
+  --color-brand-hover: #bd0016;
+  --color-brand-navy: #111827;
+  --color-brand-bg: #f3f4f6;
+  --color-brand-soft: #f3f4f6;
+  --color-brand-border: #e5e7eb;
+  --color-brand-text: #1f2937;
+  --color-brand-muted: #4b5563;
+  --color-brand-peach: #fee2e2;
 }
 
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), sans-serif;
 }
 
 @keyframes slide-in-right {
@@ -51,10 +54,26 @@ body {
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 .animate-slide-in-right {
   animation: slide-in-right 0.3s ease-out;
 }
 
 .animate-fade-in {
   animation: fade-in 0.2s ease-out;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, var(--color-brand-soft) 25%, #f9fafb 50%, var(--color-brand-soft) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite linear;
 }

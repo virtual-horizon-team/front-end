@@ -12,7 +12,8 @@ import {
     X,
     Loader2,
     TrendingDown,
-    Award
+    Award,
+    FilePlay
 } from "lucide-react";
 import { 
     UnderReviewCourse, 
@@ -99,9 +100,7 @@ export default function CourseReviewsView({ initialCourses }: CourseReviewsViewP
 
     // Filter courses client-side
     const filteredCourses = courses.filter(c => 
-        c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.instructorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.categoryName.toLowerCase().includes(searchTerm.toLowerCase())
+        c.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const pendingCount = courses.length;
@@ -132,7 +131,7 @@ export default function CourseReviewsView({ initialCourses }: CourseReviewsViewP
                 <div className="bg-white border border-brand-border/70 p-6 rounded-2xl shadow-sm flex flex-col justify-between gap-4">
                     <span className="text-[11px] font-bold text-brand-muted uppercase tracking-wider">Priority Level</span>
                     <span className="text-2xl font-extrabold text-red-600">High</span>
-                    <span className="text-xs font-semibold text-brand-muted leading-none">3 courses expiring soon</span>
+                    <span className="text-xs font-semibold text-brand-muted leading-none">Review active queue</span>
                 </div>
 
                 {/* Stat Card 3 (Bento-styled primary card) */}
@@ -173,7 +172,7 @@ export default function CourseReviewsView({ initialCourses }: CourseReviewsViewP
             </div>
 
             {/* Submissions Table Component */}
-            <div className="bg-white rounded-2xl shadow-sm border border-brand-border/70 overflow-hidden">
+            <div className="bg-white rounded-3xl shadow-sm border border-brand-border/70 overflow-hidden">
                 <div className="overflow-x-auto">
                     {loading ? (
                         <div className="py-20 flex flex-col items-center justify-center text-brand-muted gap-3">
@@ -188,45 +187,54 @@ export default function CourseReviewsView({ initialCourses }: CourseReviewsViewP
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-brand-soft/20 border-b border-brand-border/70">
-                                    <th className="px-6 py-4 text-[11px] font-bold text-brand-muted uppercase tracking-wider">Course Title</th>
-                                    <th className="px-6 py-4 text-[11px] font-bold text-brand-muted uppercase tracking-wider">Instructor</th>
-                                    <th className="px-6 py-4 text-[11px] font-bold text-brand-muted uppercase tracking-wider">Category</th>
-                                    <th className="px-6 py-4 text-[11px] font-bold text-brand-muted uppercase tracking-wider">Submitted Date</th>
-                                    <th className="px-6 py-4 text-[11px] font-bold text-brand-muted uppercase tracking-wider text-right">Actions</th>
+                                    <th className="px-6 py-4 text-[10px] font-extrabold text-brand-muted uppercase tracking-wider">Course Thumbnail & Title</th>
+                                    <th className="px-6 py-4 text-[10px] font-extrabold text-brand-muted uppercase tracking-wider">Lectures</th>
+                                    <th className="px-6 py-4 text-[10px] font-extrabold text-brand-muted uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-4 text-[10px] font-extrabold text-brand-muted uppercase tracking-wider">Submitted Date</th>
+                                    <th className="px-6 py-4 text-[10px] font-extrabold text-brand-muted uppercase tracking-wider text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-brand-border/60">
+                            <tbody className="divide-y divide-brand-border/50">
                                 {filteredCourses.map((course) => (
                                     <tr key={course.id} className="hover:bg-brand-soft/10 transition-colors group">
-                                        {/* Title info */}
+                                        {/* Thumbnail & Title */}
                                         <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3.5">
-                                                <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary">
-                                                    <BookOpenCheck size={20} />
-                                                </div>
+                                            <div className="flex items-center gap-4">
+                                                {course.thumbnailUrl ? (
+                                                    <div className="w-16 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-brand-border/50 relative shadow-sm">
+                                                        <img 
+                                                            src={course.thumbnailUrl} 
+                                                            alt={course.title} 
+                                                            className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-16 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0 border border-brand-border/40 shadow-sm">
+                                                        <BookOpenCheck size={20} />
+                                                    </div>
+                                                )}
                                                 <div>
-                                                    <p className="text-sm font-bold text-brand-navy">{course.title}</p>
-                                                    <p className="text-[11px] text-brand-muted font-medium mt-0.5">{course.description ? course.description.slice(0, 50) + "..." : "No description provided"}</p>
+                                                    <p className="text-sm font-extrabold text-brand-navy">{course.title}</p>
+                                                    <p className="text-[10px] text-brand-muted font-bold tracking-wide uppercase mt-0.5">Course ID: {course.id.slice(0, 8)}...</p>
                                                 </div>
                                             </div>
                                         </td>
-                                        {/* Instructor info */}
+                                        {/* Lecture count */}
                                         <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2.5">
-                                                <div className="w-6 h-6 rounded-full bg-brand-soft border border-brand-border/60 flex items-center justify-center font-bold text-brand-primary text-[10px] uppercase">
-                                                    {course.instructorName.slice(0, 2)}
-                                                </div>
-                                                <span className="text-sm text-brand-navy font-semibold">{course.instructorName}</span>
-                                            </div>
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-brand-soft border border-brand-border/60 text-brand-navy">
+                                                <FilePlay size={14} className="text-brand-primary" />
+                                                {course.totalLectures} {course.totalLectures === 1 ? "Lecture" : "Lectures"}
+                                            </span>
                                         </td>
-                                        {/* Category info */}
+                                        {/* Status badge */}
                                         <td className="px-6 py-4">
-                                            <span className="px-2.5 py-1 bg-brand-soft text-brand-primary rounded-lg text-[11px] font-bold">
-                                                {course.categoryName}
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                                {course.status === "UnderReview" ? "Under Review" : course.status}
                                             </span>
                                         </td>
                                         {/* Date info */}
-                                        <td className="px-6 py-4 text-sm text-brand-muted font-medium">
+                                        <td className="px-6 py-4 text-xs text-brand-muted font-bold">
                                             {new Date(course.createdAt).toLocaleDateString("en-US", {
                                                 month: "short",
                                                 day: "numeric",
@@ -239,7 +247,7 @@ export default function CourseReviewsView({ initialCourses }: CourseReviewsViewP
                                                 <button 
                                                     onClick={() => handlePublish(course)}
                                                     disabled={actionLoadingId !== null}
-                                                    className="bg-brand-primary text-white hover:bg-brand-hover px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                                    className="bg-brand-primary text-white hover:bg-brand-hover px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-95"
                                                 >
                                                     {actionLoadingId === course.id ? (
                                                         <Loader2 size={12} className="animate-spin" />
@@ -249,10 +257,10 @@ export default function CourseReviewsView({ initialCourses }: CourseReviewsViewP
                                                 <button 
                                                     onClick={() => handleOpenRejectModal(course)}
                                                     disabled={actionLoadingId !== null}
-                                                    className="border border-brand-border/80 text-brand-muted hover:border-red-200 hover:bg-red-50 hover:text-red-600 p-1.5 rounded-lg transition-all cursor-pointer disabled:opacity-50"
+                                                    className="border border-brand-border text-brand-muted hover:border-red-200 hover:bg-red-50 hover:text-red-600 p-2 rounded-xl transition-all cursor-pointer disabled:opacity-50 active:scale-95"
                                                     title="Reject course"
                                                 >
-                                                    <X size={16} />
+                                                    <X size={15} />
                                                 </button>
                                             </div>
                                         </td>
@@ -269,10 +277,10 @@ export default function CourseReviewsView({ initialCourses }: CourseReviewsViewP
                         Showing {filteredCourses.length} of {courses.length} pending submissions
                     </p>
                     <div className="flex items-center gap-2">
-                        <button disabled className="p-1.5 rounded-lg border border-brand-border/80 bg-white text-brand-muted hover:bg-brand-soft/20 disabled:opacity-50">
+                        <button disabled className="p-1.5 rounded-xl border border-brand-border bg-white text-brand-muted hover:bg-brand-soft/50 disabled:opacity-50 transition-all cursor-pointer">
                             <ChevronLeft size={16} />
                         </button>
-                        <button disabled className="p-1.5 rounded-lg border border-brand-border/80 bg-white text-brand-muted hover:bg-brand-soft/20 disabled:opacity-50">
+                        <button disabled className="p-1.5 rounded-xl border border-brand-border bg-white text-brand-muted hover:bg-brand-soft/50 disabled:opacity-50 transition-all cursor-pointer">
                             <ChevronRight size={16} />
                         </button>
                     </div>
@@ -289,13 +297,13 @@ export default function CourseReviewsView({ initialCourses }: CourseReviewsViewP
                     />
 
                     {/* Modal Card */}
-                    <div className="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden z-10 transition-all transform animate-in fade-in duration-300">
+                    <div className="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden z-10 border border-brand-border transition-all transform animate-in scale-in duration-200">
                         {/* Header */}
-                        <div className="px-6 py-5 border-b border-brand-border flex justify-between items-center bg-gray-50">
+                        <div className="px-6 py-5 border-b border-brand-border flex justify-between items-center bg-gray-50/50">
                             <h2 className="text-md font-bold text-brand-navy">Reject Course Submission</h2>
                             <button 
                                 onClick={handleCloseRejectModal}
-                                className="p-1 text-brand-muted hover:text-brand-navy rounded-lg hover:bg-brand-soft transition-all cursor-pointer"
+                                className="p-2 text-brand-muted hover:text-brand-navy rounded-xl hover:bg-brand-soft transition-all cursor-pointer"
                             >
                                 <X size={18} />
                             </button>
@@ -304,16 +312,16 @@ export default function CourseReviewsView({ initialCourses }: CourseReviewsViewP
                         {/* Body content */}
                         <div className="p-6 space-y-5">
                             {/* Warnings */}
-                            <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200/50">
+                            <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-200/50">
                                 <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
                                 <p className="text-xs font-semibold text-amber-800 leading-relaxed">
-                                    Rejecting this course will notify <strong>{rejectingCourse.instructorName}</strong>. The instructor will have to implement corrections and resubmit before it can be reviewed again.
+                                    Rejecting this course will notify the instructor. They must correct quality issues and resubmit before it can be reviewed again.
                                 </p>
                             </div>
 
                             {/* Reason for rejection input */}
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-brand-navy uppercase tracking-wide" htmlFor="reject-reason">
+                                <label className="text-[10px] font-extrabold text-brand-navy uppercase tracking-wider ml-1" htmlFor="reject-reason">
                                     Reason for rejection (optional)
                                 </label>
                                 <textarea 
@@ -322,23 +330,23 @@ export default function CourseReviewsView({ initialCourses }: CourseReviewsViewP
                                     rows={4}
                                     value={rejectReason}
                                     onChange={(e) => setRejectReason(e.target.value)}
-                                    className="w-full bg-white border border-brand-border/80 rounded-xl focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all p-4 text-sm font-medium outline-none placeholder:text-brand-muted/50"
+                                    className="w-full bg-white border border-brand-border rounded-xl focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all p-4 text-sm font-medium outline-none placeholder:text-brand-muted/50 text-brand-navy"
                                 />
                             </div>
                         </div>
 
                         {/* Footer actions */}
-                        <div className="px-6 py-4 bg-gray-50 border-t border-brand-border flex justify-end gap-3">
+                        <div className="px-6 py-4 bg-gray-50/50 border-t border-brand-border flex justify-end gap-3">
                             <button 
                                 onClick={handleCloseRejectModal}
-                                className="px-4 py-2 border border-brand-border/80 text-brand-navy rounded-xl text-xs font-bold hover:bg-brand-soft transition-colors cursor-pointer"
+                                className="px-4 py-2 border border-brand-border text-brand-navy rounded-xl text-xs font-bold hover:bg-brand-soft transition-colors cursor-pointer"
                             >
                                 Cancel
                             </button>
                             <button 
                                 onClick={handleConfirmReject}
                                 disabled={rejectSubmitLoading}
-                                className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                             >
                                 {rejectSubmitLoading ? (
                                     <Loader2 size={12} className="animate-spin" />

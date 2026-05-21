@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
-import { ADMIN_NAV_ITEMS } from "../types/navigation";
+import { ADMIN_NAV_SECTIONS } from "../types/navigation";
 import { logoutUser } from "@/features/auth/actions/logout";
 
 interface SidebarProps {
@@ -61,34 +61,60 @@ export default function Sidebar({ userName = "Admin User", email = "admin@virtua
                 </div>
 
                 {/* Main Navigation Links */}
-                <nav className="flex-1 px-4 py-2 overflow-y-auto">
-                    <ul className="space-y-1.5">
-                        {ADMIN_NAV_ITEMS.map((item) => {
-                            const active = isActive(item.href);
-                            return (
-                                <li key={item.href}>
-                                    <Link
-                                        href={item.href}
-                                        onClick={() => setMobileOpen(false)}
-                                        className={`
-                                            flex items-center gap-3 px-4 h-11 rounded-xl text-[14px] font-semibold
-                                            transition-all duration-200 group
-                                            ${active
-                                                ? "bg-brand-primary/10 text-brand-primary shadow-sm"
-                                                : "text-brand-muted hover:text-brand-navy hover:bg-brand-soft/50"
-                                            }
-                                        `}
-                                    >
-                                        <item.icon 
-                                            size={18} 
-                                            className={`transition-colors ${active ? "text-brand-primary" : "text-brand-muted group-hover:text-brand-navy"}`} 
-                                        />
-                                        {item.label}
-                                    </Link>
-                                </li>
-                            );
-                        })}
-                    </ul>
+                <nav className="flex-1 px-4 py-2 overflow-y-auto space-y-5">
+                    {ADMIN_NAV_SECTIONS.map((section) => (
+                        <div key={section.title} className="space-y-1">
+                            <h3 className="px-4 text-[10px] font-extrabold text-brand-muted/60 uppercase tracking-widest">
+                                {section.title}
+                            </h3>
+                            <ul className="space-y-1">
+                                {section.items.map((item, idx) => {
+                                    if (item.isComingSoon || !item.href) {
+                                        return (
+                                            <li key={idx}>
+                                                <div 
+                                                    className="flex items-center justify-between px-4 h-11 rounded-xl text-[14px] font-semibold text-brand-muted/40 cursor-not-allowed select-none"
+                                                    title="Planned for future releases"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <item.icon size={18} className="text-brand-muted/30" />
+                                                        <span>{item.label}</span>
+                                                    </div>
+                                                    <span className="text-[9px] px-1.5 py-0.5 font-bold uppercase tracking-wider bg-brand-soft border border-brand-border/60 text-brand-muted/50 rounded-md">
+                                                        Soon
+                                                    </span>
+                                                </div>
+                                            </li>
+                                        );
+                                    }
+
+                                    const active = isActive(item.href);
+                                    return (
+                                        <li key={item.href}>
+                                            <Link
+                                                href={item.href}
+                                                onClick={() => setMobileOpen(false)}
+                                                className={`
+                                                    flex items-center gap-3 px-4 h-11 rounded-xl text-[14px] font-semibold
+                                                    transition-all duration-200 group
+                                                    ${active
+                                                        ? "bg-brand-primary/10 text-brand-primary shadow-sm"
+                                                        : "text-brand-muted hover:text-brand-navy hover:bg-brand-soft/50"
+                                                    }
+                                                `}
+                                            >
+                                                <item.icon 
+                                                    size={18} 
+                                                    className={`transition-colors ${active ? "text-brand-primary" : "text-brand-muted group-hover:text-brand-navy"}`} 
+                                                />
+                                                {item.label}
+                                            </Link>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
+                    ))}
                 </nav>
 
                 {/* Bottom Admin User Profile info and Logout */}

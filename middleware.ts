@@ -11,6 +11,7 @@ interface DecodedToken {
     role?: string | string[];
     "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"?: string | string[];
     "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role"?: string | string[];
+    InstructorProfileId?: string;
 }
 
 /**
@@ -50,17 +51,34 @@ export async function middleware(request: NextRequest) {
     const isAuthPage = request.nextUrl.pathname.startsWith("/login") ||
         request.nextUrl.pathname.startsWith("/register");
     const isAdminPage = request.nextUrl.pathname.startsWith("/admin");
+    const isInstructorPage = request.nextUrl.pathname.startsWith("/instructor");
 
     if (session) {
+        const token = request.cookies.get("access_token")?.value || "";
+
         // Enforce administrative checks at the edge using access token claims
         if (isAdminPage) {
-            const token = request.cookies.get("access_token")?.value || "";
             const roles = getUserRolesFromToken(token);
             const isAdmin = roles.includes("admin");
 
             if (!isAdmin) {
                 // Return a standard 404 response redirect instead of revealing endpoint existence via /forbidden
                 return NextResponse.redirect(new URL("/404", request.url));
+            }
+        }
+
+        // Enforce instructor checks at the edge using InstructorProfileId claim
+        if (isInstructorPage) {
+            let isInstructor = false;
+            if (token) {
+                try {
+                    const decoded = jwtDecode<DecodedToken>(token);
+                    isInstructor = !!decoded.InstructorProfileId;
+                } catch (e) {}
+            }
+
+            if (!isInstructor) {
+                return NextResponse.redirect(new URL("/forbidden", request.url));
             }
         }
 

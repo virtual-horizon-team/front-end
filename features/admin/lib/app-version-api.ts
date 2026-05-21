@@ -1,10 +1,51 @@
 import { api } from "@/features/auth/lib/api-client";
 
+export interface ApplicationVersion {
+    id: string;
+    applicationName: string;
+    platform: string;
+    version: string;
+    url: string;
+    createdAtUtc?: string;
+}
+
+export interface ApplicationVersionPagedResult {
+    items?: ApplicationVersion[] | null;
+    totalCount: number;
+    pageNumber: number;
+    pageSize: number;
+    totalPages: number;
+}
+
+export interface ApplicationVersionDisplayParams {
+    Search?: string;
+    SortBy?: "applicationname" | "platform" | "version";
+    IsDescending?: boolean;
+    PageNumber?: number;
+    PageSize?: number;
+    "Filters[applicationName]"?: string;
+    "Filters[platform]"?: string;
+}
+
 export interface PublishVersionRequest {
     applicationName: string;
     platform: string;
     version: string;
     url: string;
+}
+
+/**
+ * Fetch paged application versions from the admin endpoint.
+ */
+export async function getAppVersions(params: ApplicationVersionDisplayParams = {}): Promise<ApplicationVersionPagedResult> {
+    const urlParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+            urlParams.append(key, value.toString());
+        }
+    });
+    const qs = urlParams.toString();
+    return api<ApplicationVersionPagedResult>(`/api/application-versions/admin${qs ? `?${qs}` : ""}`);
 }
 
 /**
@@ -20,5 +61,29 @@ export async function publishAppVersion(data: PublishVersionRequest): Promise<vo
             version: data.version.trim(),
             url: data.url.trim(),
         }),
+    });
+}
+
+/**
+ * Updates an existing application version.
+ */
+export async function updateAppVersion(id: string, data: PublishVersionRequest): Promise<void> {
+    return api<void>(`/api/application-versions/admin/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+            applicationName: data.applicationName.trim(),
+            platform: data.platform.trim(),
+            version: data.version.trim(),
+            url: data.url.trim(),
+        }),
+    });
+}
+
+/**
+ * Deletes an existing application version.
+ */
+export async function deleteAppVersion(id: string): Promise<void> {
+    return api<void>(`/api/application-versions/admin/${id}`, {
+        method: "DELETE"
     });
 }

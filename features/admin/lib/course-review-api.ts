@@ -3,17 +3,14 @@ import { api } from "@/features/auth/lib/api-client";
 export interface UnderReviewCourse {
     id: string;
     title: string;
-    description: string;
-    instructorId: string;
-    instructorName: string;
     status: "UnderReview" | "Published" | "Rejected" | string;
+    totalLectures: number;
+    thumbnailUrl?: string | null;
     createdAt: string;
-    categoryId: string;
-    categoryName: string;
 }
 
 /**
- * Fetches all courses with "UnderReview" status.
+ * Fetches all courses under review.
  */
 export async function getUnderReviewCourses(): Promise<UnderReviewCourse[]> {
     return api<UnderReviewCourse[]>("/api/admin/courses");
