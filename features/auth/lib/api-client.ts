@@ -15,12 +15,19 @@ export async function api<T>(endpoint: string, options: ApiOptions = {}): Promis
 
     const token = await getAccessToken();
 
+    const headers: Record<string, string> = {};
+    if (!(customConfig.body instanceof FormData)) {
+        headers["Content-Type"] = "application/json";
+    }
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const config: RequestInit = {
         method: customConfig.method || "GET",
         ...customConfig,
         headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...headers,
             ...customConfig.headers,
         },
         signal: controller.signal,
@@ -55,7 +62,19 @@ export async function api<T>(endpoint: string, options: ApiOptions = {}): Promis
                 if (!retryResponse.ok) {
                     let errorMessage = `Retry failed with status ${retryResponse.status}`;
                     if (typeof retryData === "object" && retryData !== null) {
-                        errorMessage = (retryData.errors && retryData.errors[0]) || retryData.message || retryData.title || errorMessage;
+                        if (retryData.errors) {
+                            if (Array.isArray(retryData.errors)) {
+                                errorMessage = retryData.errors[0] || errorMessage;
+                            } else if (typeof retryData.errors === "object") {
+                                const errorKeys = Object.keys(retryData.errors);
+                                if (errorKeys.length > 0) {
+                                    const firstErrorVal = retryData.errors[errorKeys[0]];
+                                    errorMessage = Array.isArray(firstErrorVal) ? firstErrorVal[0] : (typeof firstErrorVal === "string" ? firstErrorVal : errorMessage);
+                                }
+                            }
+                        } else {
+                            errorMessage = retryData.error || retryData.message || retryData.title || errorMessage;
+                        }
                     } else if (typeof retryData === "string" && retryData.length > 0) {
                         errorMessage = retryData;
                     }
@@ -71,7 +90,7 @@ export async function api<T>(endpoint: string, options: ApiOptions = {}): Promis
             if (typeof window !== "undefined") {
                 window.location.href = "/forbidden";
                 // Return a never-resolving promise to stop further execution
-                return new Promise(() => {}) as Promise<T>;
+                return new Promise(() => { }) as Promise<T>;
             } else {
                 const { redirect } = await import("next/navigation");
                 redirect("/forbidden");
@@ -96,7 +115,19 @@ export async function api<T>(endpoint: string, options: ApiOptions = {}): Promis
         if (!response.ok) {
             let errorMessage = `Error ${response.status}`;
             if (typeof data === "object" && data !== null) {
-                errorMessage = (data.errors && data.errors[0]) || data.message || data.title || errorMessage;
+                if (data.errors) {
+                    if (Array.isArray(data.errors)) {
+                        errorMessage = data.errors[0] || errorMessage;
+                    } else if (typeof data.errors === "object") {
+                        const errorKeys = Object.keys(data.errors);
+                        if (errorKeys.length > 0) {
+                            const firstErrorVal = data.errors[errorKeys[0]];
+                            errorMessage = Array.isArray(firstErrorVal) ? firstErrorVal[0] : (typeof firstErrorVal === "string" ? firstErrorVal : errorMessage);
+                        }
+                    }
+                } else {
+                    errorMessage = data.error || data.message || data.title || errorMessage;
+                }
             } else if (typeof data === "string" && data.length > 0) {
                 errorMessage = data;
             }

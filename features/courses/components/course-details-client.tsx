@@ -188,10 +188,10 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
 
       {/* 2. Main Two-Column Layout */}
       <section className="max-w-container-max mx-auto px-6 -mt-16 md:-mt-24 relative z-20">
-        <div className="grid md:grid-cols-12 gap-8">
+        <div className="flex flex-col md:grid md:grid-cols-12 gap-8">
           
           {/* A. Left Content Column */}
-          <div className="md:col-span-8 space-y-8 mt-32 md:mt-0">
+          <div className="md:col-span-8 space-y-8 order-2 md:order-1">
             {/* Quick Navigation Tabs (For high premium look) */}
             <div className="bg-white rounded-xl border border-brand-border p-1 shadow-sm flex overflow-x-auto scrollbar-none sticky top-[72px] z-30">
               <button
@@ -298,15 +298,15 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
                       <div key={section.id} className="group/item">
                         <button
                           onClick={() => toggleSection(section.id)}
-                          className="w-full flex items-center justify-between p-5 bg-slate-50 hover:bg-slate-100/60 transition-colors text-left"
+                          className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-5 bg-slate-50 hover:bg-slate-100/60 transition-colors text-left"
                         >
-                          <span className="font-medium text-brand-navy flex items-center gap-3">
-                            <span className="material-symbols-outlined text-brand-primary leading-none">
+                          <span className="font-medium text-brand-navy flex items-center gap-3 w-full sm:w-auto">
+                            <span className="material-symbols-outlined text-brand-primary leading-none shrink-0">
                               folder
                             </span>
-                            <span className="text-[16px]">{section.title}</span>
+                            <span className="text-[16px] pr-4">{section.title}</span>
                           </span>
-                          <div className="flex items-center gap-4 text-brand-muted text-sm font-sans">
+                          <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4 text-brand-muted text-sm font-sans pl-9 sm:pl-0">
                             <span>
                               {section.totalLessons} lessons • {formatDuration(section.totalDurationMinutes)}
                             </span>
@@ -319,7 +319,7 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
                         {/* Accordion content with CSS transitions */}
                         <div
                           className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                            isOpen ? "max-h-[1000px] border-t border-brand-border" : "max-h-0"
+                            isOpen ? "max-h-[1500px] border-t border-brand-border" : "max-h-0"
                           }`}
                         >
                           <div className="p-5 bg-white space-y-4">
@@ -327,22 +327,22 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
                               const iconName = getResourceIcon(lesson.resourceType);
                               const durationText = getLessonDurationText(lesson);
                               return (
-                                <div key={lesson.id} className="flex items-center justify-between group/lesson py-1">
-                                  <div className="flex items-center gap-3">
-                                    <span className="material-symbols-outlined text-brand-muted group-hover/lesson:text-brand-primary transition-colors text-[20px]">
+                                <div key={lesson.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 group/lesson py-1">
+                                  <div className="flex items-start sm:items-center gap-3">
+                                    <span className="material-symbols-outlined text-brand-muted group-hover/lesson:text-brand-primary transition-colors text-[20px] shrink-0 mt-0.5 sm:mt-0">
                                       {iconName}
                                     </span>
-                                    <span className="text-brand-text group-hover/lesson:text-brand-primary transition-colors text-[15px]">
+                                    <span className="text-brand-text group-hover/lesson:text-brand-primary transition-colors text-[15px] pr-4">
                                       {lesson.title}
                                     </span>
                                     {lesson.isPreview && (
-                                      <span className="text-[10px] bg-brand-peach text-brand-primary px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                                      <span className="text-[10px] bg-brand-peach text-brand-primary px-2 py-0.5 rounded font-bold uppercase tracking-wider shrink-0 mt-0.5 sm:mt-0">
                                         Preview
                                       </span>
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-3">
-                                    <span className="text-sm text-brand-muted">
+                                  <div className="flex items-center gap-3 pl-8 sm:pl-0">
+                                    <span className="text-sm text-brand-muted whitespace-nowrap">
                                       {durationText}
                                     </span>
                                   </div>
@@ -465,7 +465,7 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
           </div>
 
           {/* B. Right Sidebar Column (Sticky Buy Box) */}
-          <div className="md:col-span-4 relative">
+          <div className="md:col-span-4 relative order-1 md:order-2">
             <div className="md:sticky md:top-[96px] bg-white border border-brand-border rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300">
               
               {/* Media Thumbnail with hover overlay preview */}

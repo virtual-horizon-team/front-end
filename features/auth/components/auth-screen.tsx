@@ -259,7 +259,7 @@ export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | 
                         {mode === "register" && (
                             <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4 animate-in slide-in-from-right-4 fade-in duration-300">
                                 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
                                         <label className="text-sm font-medium text-slate-700">Full Name</label>
                                         <input
@@ -291,7 +291,7 @@ export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | 
                                     {registerForm.formState.errors.email && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/> {registerForm.formState.errors.email.message}</p>}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
                                         <label className="text-sm font-medium text-slate-700">Password</label>
                                         <div className="relative">
@@ -332,7 +332,7 @@ export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | 
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
                                         <label className="text-sm font-medium text-slate-700">Country</label>
                                         <select

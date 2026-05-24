@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, LogOut, Link2 } from "lucide-react";
+import { API_BASE_URL } from "@/lib/config";
+import { getAccessToken } from "@/features/auth/lib/get-access-token";
+import { logoutUser } from "@/features/auth/actions/logout";
 
 interface SessionData {
   userId?: string;
   userName: string;
   email?: string;
+  isInstructor?: boolean;
 }
 
 interface HeaderClientProps {
@@ -17,22 +21,63 @@ interface HeaderClientProps {
 
 export default function HeaderClient({ session }: HeaderClientProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (!session?.userId) {
+      setAvatarSrc(null);
+      return;
+    }
+
+    let active = true;
+    let objectUrl: string | null = null;
+
+    const fetchAvatar = async () => {
+      try {
+        const token = await getAccessToken();
+        const headers: Record<string, string> = {};
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+        const res = await fetch(`${API_BASE_URL}/api/Profile/avatar?userId=${session.userId}`, {
+          headers
+        });
+        if (res.ok) {
+          const blob = await res.blob();
+          if (active) {
+            if (blob.type.startsWith("image/")) {
+              objectUrl = URL.createObjectURL(blob);
+              setAvatarSrc(objectUrl);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching avatar", err);
+      }
+    };
+
+    fetchAvatar();
+
+    return () => {
+      active = false;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [session?.userId]);
 
   // Navigation Links matching the Stitch Design exactly
   const navLinks = [
     { name: "Find Courses", href: "/courses" },
-    { name: "Teach on Virtual Horizon", href: "/teach" },
+    ...(!session?.isInstructor ? [{ name: "Teach on Virtual Horizon", href: "/teach" }] : []),
     { name: "Scholarships", href: "/scholarships" },
     { name: "Community", href: "/community" },
   ];
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("/api/auth/logout", { method: "POST" });
-      if (response.ok) {
-        window.location.reload();
-      }
+      await logoutUser();
     } catch (error) {
       console.error("Failed to log out:", error);
     }
@@ -61,7 +106,7 @@ export default function HeaderClient({ session }: HeaderClientProps) {
               return (
                 <Link
                   key={link.name}
-                  href={link.href === "/courses" ? "/courses" : "#"}
+                  href={link.href === "/courses" || link.href === "/teach" ? link.href : "#"}
                   className={`text-[16px] leading-6 font-medium transition-all duration-200 ${
                     isActive
                       ? "text-brand-primary font-bold border-b-2 border-brand-primary pb-1"
@@ -77,19 +122,26 @@ export default function HeaderClient({ session }: HeaderClientProps) {
 
         {/* Right Section: Auth Buttons */}
         <div className="hidden md:flex items-center gap-6">
-          <Link
-            href="/pair-device"
-            className="flex items-center gap-1.5 text-brand-muted hover:text-brand-primary text-[14px] font-medium transition-colors"
-          >
-            <Link2 className="w-4 h-4" />
-            Pair Device
-          </Link>
-
           {session ? (
             <div className="flex items-center gap-4">
-              <span className="text-[14px] font-semibold text-brand-text bg-brand-soft/50 py-1.5 px-3.5 rounded-full border border-brand-border">
-                {session.userName}
-              </span>
+              <Link 
+                href="/profile"
+                className="text-[14px] font-semibold text-brand-text bg-brand-soft/50 hover:bg-brand-soft hover:text-brand-primary py-1 px-3 rounded-full border border-brand-border transition-all duration-150 flex items-center gap-2"
+              >
+                {avatarSrc ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img 
+                    src={avatarSrc}
+                    alt={session.userName}
+                    className="w-6 h-6 rounded-full object-cover border border-brand-border"
+                  />
+                ) : (
+                  <span className="w-6 h-6 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center text-[10px] font-bold uppercase border border-brand-primary/20">
+                    {session.userName.slice(0, 2)}
+                  </span>
+                )}
+                <span>{session.userName}</span>
+              </Link>
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-1 text-brand-muted hover:text-brand-primary text-sm font-medium transition-colors"
@@ -144,7 +196,7 @@ export default function HeaderClient({ session }: HeaderClientProps) {
               return (
                 <Link
                   key={link.name}
-                  href={link.href === "/courses" ? "/courses" : "#"}
+                  href={link.href === "/courses" || link.href === "/teach" ? link.href : "#"}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`text-[15px] font-medium py-1 transition-colors ${
                     isActive ? "text-brand-primary font-bold" : "text-brand-muted"
@@ -159,26 +211,39 @@ export default function HeaderClient({ session }: HeaderClientProps) {
           <hr className="border-brand-border" />
 
           <div className="flex flex-col gap-3">
-            <Link
-              href="/pair-device"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-2 text-brand-muted hover:text-brand-primary text-sm font-medium py-1"
-            >
-              <Link2 className="w-4 h-4" />
-              Pair Device
-            </Link>
-
             {session ? (
               <div className="flex flex-col gap-3">
-                <span className="text-sm font-semibold text-brand-text">
-                  Logged in as: <span className="text-brand-primary">{session.userName}</span>
-                </span>
+                <div className="flex items-center gap-3">
+                  {avatarSrc ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img 
+                      src={avatarSrc}
+                      alt={session.userName}
+                      className="w-10 h-10 rounded-full object-cover border border-brand-border"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold uppercase border border-brand-primary/20">
+                      {session.userName.slice(0, 2)}
+                    </div>
+                  )}
+                  <div className="flex flex-col">
+                    <span className="text-xs text-brand-muted font-medium">Logged in as</span>
+                    <span className="text-sm font-bold text-brand-text">{session.userName}</span>
+                  </div>
+                </div>
+                <Link
+                  href="/profile"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-sm font-semibold text-brand-primary hover:text-brand-hover py-1 self-start"
+                >
+                  My Profile
+                </Link>
                 <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     handleLogout();
                   }}
-                  className="flex items-center gap-2 text-brand-primary hover:text-brand-hover text-sm font-semibold py-1.5 self-start"
+                  className="flex items-center gap-2 text-brand-muted hover:text-red-500 text-sm font-semibold py-1 self-start cursor-pointer"
                 >
                   <LogOut className="w-4.5 h-4.5" />
                   Sign Out

@@ -6,6 +6,7 @@ interface JWTPayload {
     email?: string;
     exp: number;
     "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"?: string;
+    InstructorProfileId?: string;
 }
 
 export async function getSession() {
@@ -24,6 +25,7 @@ export async function getSession() {
             userId: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"],
             userName: decoded.sub,
             email: decoded.email,
+            isInstructor: !!decoded.InstructorProfileId,
         };
     } catch (error) {
         return null;
