@@ -572,17 +572,24 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
                           Enrolled Successfully!
                         </div>
                         <Link
-                          href="/profile/courses"
+                          href={`/courses/${course.id}`}
                           className="block w-full bg-emerald-600 text-white py-3.5 rounded-lg font-semibold hover:bg-emerald-700 active:scale-[0.98] transition-all text-center text-[16px]"
                         >
-                          Go to Classroom
+                          Go to Course
                         </Link>
                       </div>
                     )}
                   </>
                 ) : (
                   <>
-                    {isAlreadyInCart ? (
+                    {enrollmentStatus === "enrolled" ? (
+                      <Link
+                        href={`/courses/${course.id}`}
+                        className="block w-full bg-emerald-600 text-white py-3.5 rounded-lg font-semibold hover:bg-emerald-700 active:scale-[0.98] transition-all text-center text-[16px]"
+                      >
+                        Go to Course
+                      </Link>
+                    ) : isAlreadyInCart ? (
                       <Link
                         href="/cart"
                         className="block w-full bg-emerald-600 text-white py-3.5 rounded-lg font-semibold hover:bg-emerald-700 active:scale-[0.98] transition-all text-center text-[16px]"

@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle2, BookOpen, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useCartStore } from '@/features/cart/hooks/useCartStore';
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
   const [isVerifying, setIsVerifying] = useState(true);
@@ -18,7 +18,6 @@ export default function PaymentSuccessPage() {
         setIsVerifying(false);
         fetchCount();
       }, 3000);
-      
       return () => clearTimeout(timer);
     } else {
       setIsVerifying(false);
@@ -30,7 +29,7 @@ export default function PaymentSuccessPage() {
       <div className="container mx-auto px-6 py-20 text-center max-w-2xl min-h-[60vh] flex flex-col items-center justify-center">
         <span className="material-symbols-outlined text-brand-primary text-6xl mb-4 leading-none">error</span>
         <h1 className="font-serif text-[28px] text-brand-navy font-normal mb-3">Invalid Payment Session</h1>
-        <p className="text-brand-muted mb-8">We couldn't verify your payment session.</p>
+        <p className="text-brand-muted mb-8">We couldn&apos;t verify your payment session.</p>
         <Link href="/cart" className="text-brand-primary hover:text-brand-hover font-semibold transition-colors flex items-center">
           Return to Cart
         </Link>
@@ -52,7 +51,7 @@ export default function PaymentSuccessPage() {
       <h1 className="font-serif text-[36px] md:text-[44px] text-brand-navy font-normal mb-4">
         Payment Successful!
       </h1>
-      
+
       {isVerifying ? (
         <p className="text-base font-semibold text-brand-muted mb-8 animate-pulse">
           Verifying your order and unlocking your courses...
@@ -84,15 +83,15 @@ export default function PaymentSuccessPage() {
       </div>
 
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
-        <Link 
+        <Link
           href="/profile/courses"
           className="w-full sm:w-auto px-8 py-3.5 bg-brand-primary text-white font-semibold rounded-lg hover:bg-brand-hover active:scale-95 transition-all duration-150 shadow-sm flex items-center justify-center cursor-pointer"
         >
           <BookOpen className="w-5 h-5 mr-2" />
           Go to My Courses
         </Link>
-        <Link 
-          href="/courses" 
+        <Link
+          href="/courses"
           className="w-full sm:w-auto px-8 py-3.5 bg-white text-brand-primary border border-brand-border font-semibold rounded-lg hover:bg-brand-peach/20 active:scale-95 transition-all duration-150 flex items-center justify-center cursor-pointer"
         >
           <Search className="w-5 h-5 mr-2" />
@@ -100,5 +99,18 @@ export default function PaymentSuccessPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-6 py-20 text-center min-h-[80vh] flex flex-col items-center justify-center">
+        <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mb-6" />
+        <p className="text-brand-muted font-medium">Loading payment details...</p>
+      </div>
+    }>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }
