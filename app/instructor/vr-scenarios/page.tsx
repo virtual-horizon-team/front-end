@@ -226,9 +226,10 @@ export default async function VRScenariosPage({
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {scenarios.map((scenario) => (
-                        <article
+                        <Link
                             key={scenario.id}
-                            className="bg-white border border-brand-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                            href={`/instructor/vr-scenarios/${scenario.id}?title=${encodeURIComponent(scenario.title || "")}`}
+                            className="block bg-white border border-brand-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 duration-200"
                         >
                             <div className="aspect-[16/9] bg-brand-soft relative overflow-hidden group">
                                 {scenario.previewSasUrl ? (
@@ -272,7 +273,7 @@ export default async function VRScenariosPage({
                                     </span>
                                 </div>
                             </div>
-                        </article>
+                        </Link>
                     ))}
                 </div>
             )}
