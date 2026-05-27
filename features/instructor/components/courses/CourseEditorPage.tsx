@@ -158,7 +158,7 @@ export default function CourseEditorPage({ courseId }: CourseEditorPageProps) {
             </div>
 
             {/* Layout: sidebar + content */}
-            <div className="flex flex-col lg:flex-row gap-6">
+            <div className="flex flex-col lg:flex-row gap-6 course-steps-container">
                 {/* Step sidebar */}
                 <div className="lg:w-64 shrink-0">
                     <div className="lg:sticky lg:top-8 space-y-1">
@@ -197,7 +197,7 @@ export default function CourseEditorPage({ courseId }: CourseEditorPageProps) {
                 </div>
 
                 {/* Step content */}
-                <div className="flex-1 bg-white rounded-xl border border-brand-border shadow-sm p-6 md:p-8 min-h-[500px]">
+                <div className="flex-1 bg-white rounded-xl border border-brand-border shadow-sm p-6 md:p-8 min-h-[500px] course-editor-step-content">
                     {activeStep === "basic" && (
                         <BasicInfoStep
                             courseId={courseId}
