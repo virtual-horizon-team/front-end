@@ -1,25 +1,57 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import CourseFilters, { FilterState } from "@/features/courses/components/course-filters";
 import CourseSearchBar from "@/features/courses/components/course-search-bar";
 import CourseList from "@/features/courses/components/course-list";
 import { searchCourses } from "@/features/courses/lib/public-courses-api";
 import { CourseCardDto, CourseSortBy } from "@/features/courses/types";
 
-export default function CoursesPage() {
+import { api } from "@/features/auth/lib/api-client";
+import { CategoryTreeNode } from "@/features/instructor/types/course";
+import { useSearchParams } from "next/navigation";
+
+function CoursesPageContent() {
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
+
   const [courses, setCourses] = useState<CourseCardDto[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Categories list state
+  const [categories, setCategories] = useState<CategoryTreeNode[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+
   // States for search parameters
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+
+  // Sync URL search params
+  useEffect(() => {
+    setSearchQuery(initialSearch);
+  }, [initialSearch]);
   const [sortBy, setSortBy] = useState<CourseSortBy>("MostPopular");
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<FilterState>({});
   const [isFiltersVisible, setIsFiltersVisible] = useState(true);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setIsLoadingCategories(true);
+      try {
+        const data = await api<CategoryTreeNode[]>("/api/categories");
+        setCategories(data || []);
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const fetchCourses = useCallback(async () => {
     setIsLoading(true);
@@ -27,6 +59,7 @@ export default function CoursesPage() {
     try {
       const result = await searchCourses({
         search: searchQuery || undefined,
+        slugCategory: filters.slugCategory,
         level: filters.level,
         language: filters.language,
         minRating: filters.minRating,
@@ -76,14 +109,15 @@ export default function CoursesPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const hasActiveFilters = 
-    filters.level || 
-    filters.language || 
-    filters.minRating || 
-    filters.isFree !== undefined || 
-    filters.minPrice !== undefined || 
-    filters.maxPrice !== undefined || 
-    filters.hasVRScenarios;
+  const hasActiveFilters =
+    filters.level ||
+    filters.language ||
+    filters.minRating ||
+    filters.isFree !== undefined ||
+    filters.minPrice !== undefined ||
+    filters.maxPrice !== undefined ||
+    filters.hasVRScenarios ||
+    filters.slugCategory;
 
   const removeFilterKey = (key: keyof FilterState) => {
     const updated = { ...filters };
@@ -105,8 +139,31 @@ export default function CoursesPage() {
     setCurrentPage(1);
   };
 
+  const findCategoryName = useCallback((slug: string): string => {
+    const searchNode = (nodes: CategoryTreeNode[]): string | null => {
+      for (const node of nodes) {
+        if (node.slug === slug) return node.name;
+        if (node.children) {
+          const found = searchNode(node.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    return searchNode(categories) || slug;
+  }, [categories]);
+
   const renderActiveFilterChips = () => {
     const chips = [];
+
+    if (filters.slugCategory) {
+      chips.push(
+        <span key="category" className="inline-flex items-center gap-1.5 bg-brand-peach/50 text-brand-primary border border-brand-border/40 px-3 py-1 rounded-full text-xs font-semibold">
+          Category: {findCategoryName(filters.slugCategory)}
+          <button onClick={() => removeFilterKey("slugCategory")} className="hover:text-brand-hover font-bold ml-1 text-[16px] leading-none cursor-pointer">×</button>
+        </span>
+      );
+    }
 
     if (filters.level) {
       chips.push(
@@ -169,10 +226,15 @@ export default function CoursesPage() {
   };
 
   return (
-    <main className={`max-w-container-max mx-auto px-6 py-10 flex flex-col md:flex-row bg-brand-bg min-h-screen transition-all duration-300 ${isFiltersVisible ? "gap-6" : "gap-0"}`}>
+    <main className={`max-w-container-max mx-auto px-6 py-10 flex flex-col md:flex-row min-h-screen transition-all duration-300 ${isFiltersVisible ? "gap-6" : "gap-0"}`}>
       {/* Sidebar filter section */}
       <div className={`transition-all duration-300 ease-in-out flex-shrink-0 ${isFiltersVisible ? "w-full md:w-64 opacity-100" : "w-0 h-0 md:w-0 overflow-hidden opacity-0 pointer-events-none"}`}>
-        <CourseFilters filters={filters} onChange={handleFilterChange} />
+        <CourseFilters
+          filters={filters}
+          onChange={handleFilterChange}
+          categories={categories}
+          isLoadingCategories={isLoadingCategories}
+        />
       </div>
 
       {/* Main catalog results column */}
@@ -217,5 +279,18 @@ export default function CoursesPage() {
         />
       </div>
     </main>
+  );
+}
+
+export default function CoursesPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-container-max mx-auto px-6 py-20 text-center min-h-[80vh] flex flex-col items-center justify-center">
+        <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mb-6" />
+        <p className="text-brand-muted font-medium">Loading courses...</p>
+      </div>
+    }>
+      <CoursesPageContent />
+    </Suspense>
   );
 }

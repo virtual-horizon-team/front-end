@@ -50,3 +50,16 @@ export async function searchCourses(params: CourseFilterParams): Promise<PagedRe
 export async function getCourseDetails(id: string): Promise<CourseDetailDto> {
   return api<CourseDetailDto>(`/api/public/courses/${id}`);
 }
+
+export interface LessonPreviewDto {
+  resourceId: string;
+  resourceType: "Document" | "Video" | string;
+  streamUrl: string | null;
+  downloadUrl: string;
+  expiresAt: string;
+}
+
+export async function getLessonPreview(lessonId: string, resourceType: string): Promise<LessonPreviewDto> {
+  return api<LessonPreviewDto>(`/api/public/lesson-preview?lessonId=${lessonId}&resourceType=${resourceType}`);
+}
+

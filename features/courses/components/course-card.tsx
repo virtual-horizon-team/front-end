@@ -41,106 +41,108 @@ export default function CourseCard({ course }: CourseCardProps) {
   };
 
   return (
-    <div className="bg-white border border-brand-border rounded-xl overflow-hidden shadow-sm hover:shadow-[0_20px_40px_rgba(147,0,11,0.06)] hover:-translate-y-1.5 transition-all duration-300 group flex flex-col h-full">
-      {/* Thumbnail and absolute badges */}
-      <div className="h-48 relative overflow-hidden bg-brand-soft/30 flex-shrink-0">
+    <div className="bg-white border border-brand-border rounded-xl overflow-hidden shadow-sm hover:shadow-[0_15px_30px_rgba(147,0,11,0.05)] hover:border-brand-primary/20 hover:-translate-y-1.5 transition-all duration-300 group flex flex-col h-full">
+      {/* Thumbnail */}
+      <div className="h-40 relative overflow-hidden bg-brand-soft/30 flex-shrink-0">
         {course.thumbnailUrl ? (
-          <img
-            src={course.thumbnailUrl}
-            alt={course.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
+          <>
+            <img
+              src={course.thumbnailUrl}
+              alt={course.title}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            />
+            {/* Soft overlay gradient to create depth */}
+            <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/35 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-300 pointer-events-none" />
+          </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-brand-muted bg-brand-soft">
-            <span className="text-xs font-semibold uppercase tracking-wider">No Preview Available</span>
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-brand-navy via-brand-navy/90 to-brand-muted text-white relative">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--color-brand-primary)_0%,_transparent_75%)] opacity-25" />
+            <span className="material-symbols-outlined text-[36px] text-white/40 mb-1">school</span>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-white/60">Virtual Horizon Academy</span>
           </div>
         )}
-        
-        {/* Floating Badges */}
-        <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-10">
-          {course.categoryName && (
-            <span className="bg-brand-peach text-brand-primary px-3 py-1 rounded-full text-xs font-semibold tracking-wide">
-              {course.categoryName}
-            </span>
-          )}
-          {course.hasVRScenarios && (
-            <span className="bg-brand-primary text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm">
-              <span className="material-symbols-outlined text-[14px]">view_in_ar</span> VR Scenario
-            </span>
-          )}
-        </div>
       </div>
 
       {/* Card Body */}
-      <div className="p-4 flex flex-col flex-grow justify-between space-y-4">
+      <div className="p-4 flex flex-col flex-grow justify-between space-y-3">
         {/* Header Title and Instructor */}
-        <div className="space-y-3">
+        <div className="space-y-2">
+          {/* Tags row: category & level on left, VR Scenario on right */}
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              {course.categoryName && (
+                <span className="inline-block text-[10px] font-extrabold text-brand-primary uppercase tracking-widest bg-brand-peach/40 px-1.5 py-0.5 rounded">
+                  {course.categoryName}
+                </span>
+              )}
+              <span className="bg-brand-soft px-1.5 py-0.5 rounded text-[10px] font-bold border border-brand-border/60 uppercase tracking-wider text-brand-muted">
+                {course.level}
+              </span>
+            </div>
+            {course.hasVRScenarios && (
+              <span className="bg-brand-primary text-white px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                <span className="material-symbols-outlined text-[12px] animate-pulse">view_in_ar</span> VR Enabled
+              </span>
+            )}
+          </div>
+
           <Link href={`/courses/${course.id}`} className="block">
-            <h4 className="font-serif text-[18px] leading-snug font-normal text-brand-text group-hover:text-brand-primary transition-colors line-clamp-2 min-h-[44px]">
+            <h4 className="font-serif text-[16px] leading-snug font-bold text-brand-navy group-hover:text-brand-primary transition-colors line-clamp-2 min-h-[38px]">
               {course.title}
             </h4>
           </Link>
 
-          {/* Instructor metadata */}
-          <div className="flex items-center gap-2">
-            {course.instructor?.avatarUrl ? (
-              <img
-                src={course.instructor.avatarUrl}
-                alt={course.instructor.fullName}
-                className="w-8 h-8 rounded-full object-cover border border-brand-border"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-brand-soft text-brand-primary flex items-center justify-center font-bold text-xs">
-                {course.instructor?.fullName?.charAt(0) || "I"}
-              </div>
-            )}
-            <span className="text-sm font-medium text-brand-muted line-clamp-1">
-              {course.instructor?.fullName || "Instructor"}
-            </span>
-          </div>
+          {/* Instructor metadata (No avatar) */}
+          <p className="text-[11px] font-semibold text-brand-muted">
+            by <span className="text-brand-navy font-bold hover:text-brand-primary transition-colors cursor-pointer">{course.instructor?.fullName || "Instructor"}</span>
+          </p>
         </div>
 
-        {/* Rating, Duration, Price, and Bookmark */}
-        <div className="pt-3 border-t border-brand-border space-y-3">
-          <div className="flex items-center justify-between">
-            {/* Star Rating details */}
-            <div className="flex items-center gap-1">
-              <span 
-                className="material-symbols-outlined text-[18px] text-brand-primary" 
-                style={{ fontVariationSettings: "'FILL' 1, 'wght' 400" }}
-              >
-                star
-              </span>
-              <span className="text-sm font-bold text-brand-text">
-                {course.averageRating ? course.averageRating.toFixed(1) : "0.0"}
-              </span>
-              <span className="text-xs text-brand-muted font-medium">
-                ({formatReviewCount(course.totalReviews)})
-              </span>
-            </div>
-            
-            {/* Clock Duration details */}
-            <div className="flex items-center gap-1 text-brand-muted">
-              <span className="material-symbols-outlined text-[16px] text-brand-muted">
-                schedule
-              </span>
-              <span className="text-xs font-semibold">
-                {formatDuration(course.totalDurationMinutes)}
-              </span>
-            </div>
+        {/* Specs, Rating, Price, and Bookmark */}
+        <div className="pt-2.5 border-t border-brand-border space-y-2.5">
+          {/* Metadata Specs & Ratings in a single compact line */}
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-brand-muted flex-wrap">
+            {/* Rating */}
+            <span className="flex items-center gap-0.5 text-amber-500">
+              <span className="material-symbols-outlined" style={{ fontSize: "15px", fontVariationSettings: "'FILL' 1, 'wght' 500" }}>star</span>
+              <span className="text-brand-navy font-bold">{course.averageRating && course.averageRating > 0 ? course.averageRating.toFixed(1) : "New"}</span>
+            </span>
+            {course.totalReviews > 0 && (
+              <span className="text-brand-muted">({formatReviewCount(course.totalReviews)})</span>
+            )}
+
+            <span className="text-brand-border">•</span>
+
+            {/* Lectures */}
+            <span className="flex items-center gap-0.5">
+              <span className="material-symbols-outlined text-[13px]">menu_book</span>
+              {course.totalLectures} {course.totalLectures === 1 ? "lecture" : "lectures"}
+            </span>
+
+            <span className="text-brand-border">•</span>
+
+            {/* Duration */}
+            <span className="flex items-center gap-0.5">
+              <span className="material-symbols-outlined text-[13px]">schedule</span>
+              {formatDuration(course.totalDurationMinutes)}
+            </span>
           </div>
 
           {/* Footer of the card: Price & Bookmark */}
           <div className="flex items-center justify-between pt-1">
             {displayPrice()}
-            
+
             <button
-              onClick={() => setIsBookmarked(!isBookmarked)}
-              className="p-1.5 rounded-lg text-brand-primary hover:bg-brand-peach/40 transition-all active:scale-90 duration-150 cursor-pointer select-none"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsBookmarked(!isBookmarked);
+              }}
+              className="p-1 rounded-lg text-brand-primary hover:bg-brand-peach/40 transition-all active:scale-90 duration-150 cursor-pointer select-none"
               title={isBookmarked ? "Remove Bookmark" : "Save Course"}
             >
-              <span 
-                className="material-symbols-outlined text-[22px] leading-none transition-all duration-150"
+              <span
+                className="material-symbols-outlined text-[18px] leading-none transition-all duration-150"
                 style={{ fontVariationSettings: isBookmarked ? "'FILL' 1, 'wght' 400" : "'FILL' 0, 'wght' 400" }}
               >
                 {isBookmarked ? "bookmark" : "bookmark_add"}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Check } from "lucide-react";
 import { CourseLevel } from "../types";
+import { CategoryTreeNode } from "@/features/instructor/types/course";
 
 export interface FilterState {
   level?: CourseLevel;
@@ -10,22 +11,129 @@ export interface FilterState {
   minPrice?: number;
   maxPrice?: number;
   hasVRScenarios?: boolean;
+  slugCategory?: string;
 }
 
 interface CourseFiltersProps {
   filters: FilterState;
   onChange: (updatedFilters: FilterState) => void;
+  categories: CategoryTreeNode[];
+  isLoadingCategories: boolean;
 }
 
-export default function CourseFilters({ filters, onChange }: CourseFiltersProps) {
+function CategoryNode({
+  node,
+  depth,
+  selectedSlug,
+  expandedCategories,
+  onToggleExpand,
+  onSelect,
+  matchesSearch,
+}: {
+  node: CategoryTreeNode;
+  depth: number;
+  selectedSlug?: string;
+  expandedCategories: Record<string, boolean>;
+  onToggleExpand: (id: string) => void;
+  onSelect: (slug?: string) => void;
+  matchesSearch: (node: CategoryTreeNode) => boolean;
+}) {
+  const isSelected = selectedSlug === node.slug;
+  const hasChildren = node.children && node.children.length > 0;
+  const isExpanded = !!expandedCategories[node.id];
+
+  const shouldRender = matchesSearch(node);
+  if (!shouldRender) return null;
+
+  return (
+    <div className="space-y-1">
+      <div
+        className={`flex items-center justify-between py-1.5 px-2.5 rounded-lg text-sm transition-all group/node ${
+          isSelected
+            ? "bg-brand-peach text-brand-primary font-bold shadow-sm"
+            : "text-brand-text hover:bg-brand-soft hover:text-brand-primary"
+        }`}
+        style={{ paddingLeft: `${depth * 12 + 10}px` }}
+      >
+        <button
+          onClick={() => onSelect(isSelected ? undefined : node.slug)}
+          className="flex-grow text-left truncate cursor-pointer font-medium"
+        >
+          {node.name}
+        </button>
+        {hasChildren && (
+          <button
+            onClick={() => onToggleExpand(node.id)}
+            className="p-0.5 text-brand-muted hover:text-brand-primary transition-colors cursor-pointer rounded hover:bg-brand-soft"
+          >
+            <span className={`material-symbols-outlined text-[16px] leading-none transition-transform duration-250 ${isExpanded ? "rotate-90" : ""}`}>
+              chevron_right
+            </span>
+          </button>
+        )}
+      </div>
+      {hasChildren && isExpanded && (
+        <div className="space-y-1 mt-0.5">
+          {node.children.map((child) => (
+            <CategoryNode
+              key={child.id}
+              node={child}
+              depth={depth + 1}
+              selectedSlug={selectedSlug}
+              expandedCategories={expandedCategories}
+              onToggleExpand={onToggleExpand}
+              onSelect={onSelect}
+              matchesSearch={matchesSearch}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function CourseFilters({ filters, onChange, categories, isLoadingCategories }: CourseFiltersProps) {
   const [minPriceInput, setMinPriceInput] = useState<string>(filters.minPrice?.toString() || "");
   const [maxPriceInput, setMaxPriceInput] = useState<string>(filters.maxPrice?.toString() || "");
+  const [searchCategoryQuery, setSearchCategoryQuery] = useState("");
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
 
   // Update input fields if filters state changes externally
   useEffect(() => {
     setMinPriceInput(filters.minPrice?.toString() || "");
     setMaxPriceInput(filters.maxPrice?.toString() || "");
   }, [filters.minPrice, filters.maxPrice]);
+
+  // Auto-expand parents that have children matching search query
+  useEffect(() => {
+    if (searchCategoryQuery) {
+      const newExpanded: Record<string, boolean> = {};
+      const autoExpand = (nodes: CategoryTreeNode[]) => {
+        nodes.forEach(node => {
+          const hasMatchingChild = node.children && node.children.some(child => {
+            const matchesSelf = child.name.toLowerCase().includes(searchCategoryQuery.toLowerCase());
+            const matchesChild = child.children && child.children.some(c => matchesSelf || c.name.toLowerCase().includes(searchCategoryQuery.toLowerCase()));
+            return matchesSelf || matchesChild;
+          });
+          if (hasMatchingChild) {
+            newExpanded[node.id] = true;
+          }
+          if (node.children) {
+            autoExpand(node.children);
+          }
+        });
+      };
+      autoExpand(categories);
+      setExpandedCategories(prev => ({ ...prev, ...newExpanded }));
+    }
+  }, [searchCategoryQuery, categories]);
+
+  const matchesSearch = (node: CategoryTreeNode): boolean => {
+    if (!searchCategoryQuery) return true;
+    const matchesSelf = node.name.toLowerCase().includes(searchCategoryQuery.toLowerCase());
+    const matchesChild = node.children && node.children.some(child => matchesSearch(child));
+    return matchesSelf || matchesChild;
+  };
 
   const handleLevelChange = (level: CourseLevel) => {
     const isCurrentlySelected = filters.level === level;
@@ -62,6 +170,7 @@ export default function CourseFilters({ filters, onChange }: CourseFiltersProps)
     onChange({});
     setMinPriceInput("");
     setMaxPriceInput("");
+    setSearchCategoryQuery("");
   };
 
   return (
@@ -75,6 +184,71 @@ export default function CourseFilters({ filters, onChange }: CourseFiltersProps)
         >
           Clear All
         </button>
+      </div>
+
+      {/* Category Filter Section */}
+      <div className="space-y-3 pt-4 border-t border-brand-border">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-bold tracking-wider text-brand-muted uppercase">Categories</p>
+          {filters.slugCategory && (
+            <button
+              onClick={() => onChange({ ...filters, slugCategory: undefined })}
+              className="text-[10px] font-bold text-brand-primary hover:text-brand-hover hover:underline transition-colors cursor-pointer"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        {/* Category Search Input */}
+        <div className="relative">
+          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[15px] text-brand-muted select-none">
+            search
+          </span>
+          <input
+            type="text"
+            placeholder="Search categories..."
+            value={searchCategoryQuery}
+            onChange={(e) => setSearchCategoryQuery(e.target.value)}
+            className="w-full pl-8 pr-7 py-1.5 rounded-lg border border-brand-border bg-white focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary text-xs text-brand-text transition-all outline-none"
+          />
+          {searchCategoryQuery && (
+            <button
+              onClick={() => setSearchCategoryQuery("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-primary text-[14px] font-bold cursor-pointer"
+            >
+              ×
+            </button>
+          )}
+        </div>
+
+        {/* Categories Tree list */}
+        <div className="space-y-1 max-h-60 overflow-y-auto pr-1">
+          {isLoadingCategories ? (
+            <div className="space-y-2 py-2">
+              <div className="h-6 bg-brand-soft animate-shimmer rounded w-4/5" />
+              <div className="h-6 bg-brand-soft animate-shimmer rounded w-3/4 pl-3" />
+              <div className="h-6 bg-brand-soft animate-shimmer rounded w-2/3 animate-pulse" />
+            </div>
+          ) : categories.length === 0 ? (
+            <p className="text-xs text-brand-muted py-2 select-none">No categories found.</p>
+          ) : (
+            categories.map((cat) => (
+              <CategoryNode
+                key={cat.id}
+                node={cat}
+                depth={0}
+                selectedSlug={filters.slugCategory}
+                expandedCategories={expandedCategories}
+                onToggleExpand={(id) =>
+                  setExpandedCategories((prev) => ({ ...prev, [id]: !prev[id] }))
+                }
+                onSelect={(slug) => onChange({ ...filters, slugCategory: slug })}
+                matchesSearch={matchesSearch}
+              />
+            ))
+          )}
+        </div>
       </div>
 
       {/* Level Filter */}
