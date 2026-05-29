@@ -84,7 +84,7 @@ function PaymentSuccessContent() {
 
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
         <Link
-          href="/profile/courses"
+          href="/my-courses"
           className="w-full sm:w-auto px-8 py-3.5 bg-brand-primary text-white font-semibold rounded-lg hover:bg-brand-hover active:scale-95 transition-all duration-150 shadow-sm flex items-center justify-center cursor-pointer"
         >
           <BookOpen className="w-5 h-5 mr-2" />

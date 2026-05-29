@@ -32,6 +32,7 @@ import StudyRoomHeader from "./components/study-room-header";
 import StudyRoomTabs from "./components/study-room-tabs";
 import StudyRoomCurriculumSidebar from "./components/study-room-curriculum-sidebar";
 import StudyRoomQuizPlayer from "./components/study-room-quiz-player";
+import ScenarioMetadataCard from "./components/scenario-metadata-card";
 
 export default function CourseStudyRoom() {
   const params = useParams();
@@ -68,8 +69,7 @@ export default function CourseStudyRoom() {
   const [quizResult, setQuizResult] = useState<QuizAttemptPreviewDto | null>(null);
   const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false);
 
-  // VR Scenario state
-  const [vrStatus, setVrStatus] = useState<"idle" | "launching" | "active">("idle");
+
 
   // Video Heartbeat ref
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -161,7 +161,6 @@ export default function CourseStudyRoom() {
     setQuizStarted(false);
     setQuizResult(null);
     setSelectedAnswers({});
-    setVrStatus("idle");
 
     try {
       // 1. Get Progress for the lesson
@@ -310,12 +309,9 @@ export default function CourseStudyRoom() {
     setExpandedSections((prev) => ({ ...prev, [sectionId]: !prev[sectionId] }));
   };
 
-  // Launch VR Scenario simulation
+  // Launch VR Scenario — navigate to pair-device page
   const handleLaunchVR = () => {
-    setVrStatus("launching");
-    setTimeout(() => {
-      setVrStatus("active");
-    }, 2000);
+    router.push("/pair-device");
   };
 
   // Navigate to Next/Prev lesson
@@ -484,55 +480,20 @@ export default function CourseStudyRoom() {
 
                   {/* VR SCENARIO RESOURCE */}
                   {activeLesson.resourceType === "Scenario" && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-slate-55">
-                      <div className={`p-6 border rounded-full mb-4 transition-all duration-300 ${
-                        vrStatus === "active" 
-                          ? "bg-green-50 border-green-200 text-green-600 scale-105" 
-                          : vrStatus === "launching" 
-                          ? "bg-orange-50 border-orange-200 text-orange-600 animate-pulse" 
-                          : "bg-orange-55 border-orange-200 text-orange-650"
-                      }`}>
-                        <Flame className="w-12 h-12" />
+                    <div className="absolute inset-0 overflow-y-auto bg-brand-bg">
+                      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+                        {(activeLesson.scenarioId || activeLesson.resourceId) ? (
+                          <ScenarioMetadataCard
+                            scenarioId={(activeLesson.scenarioId || activeLesson.resourceId)!}
+                            lessonTitle={activeLesson.title}
+                          />
+                        ) : (
+                          <div className="p-8 bg-white border border-dashed border-brand-border rounded-2xl text-center text-sm text-brand-muted">
+                            <span className="material-symbols-outlined text-4xl block mb-3 opacity-40">vrpano</span>
+                            No additional metadata available for this scenario.
+                          </div>
+                        )}
                       </div>
-                      <h3 className="text-xl font-bold mb-2 text-brand-text">VR Interactive Scenario</h3>
-                      
-                      {vrStatus === "idle" && (
-                        <>
-                          <p className="text-sm text-brand-muted max-w-md mb-6 font-medium">
-                            Launch the VR scene simulation directly to start your immersive workspace training modules.
-                          </p>
-                          <button
-                            onClick={handleLaunchVR}
-                            className="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-8 py-3.5 rounded-xl font-bold text-sm transition-all shadow-md cursor-pointer hover:scale-102 active:scale-98"
-                          >
-                            Launch VR Experience
-                          </button>
-                        </>
-                      )}
-
-                      {vrStatus === "launching" && (
-                        <div className="flex flex-col items-center gap-2">
-                          <div className="w-8 h-8 border-2 border-orange-600 border-t-transparent rounded-full animate-spin mb-2" />
-                          <p className="text-sm text-orange-650 font-semibold">Connecting device & loading VR engine...</p>
-                        </div>
-                      )}
-
-                      {vrStatus === "active" && (
-                        <div className="flex flex-col items-center gap-4 animate-fade-in">
-                          <p className="text-sm text-green-650 font-bold flex items-center gap-1.5">
-                            <Check className="w-4 h-4" /> VR Simulation active on headset!
-                          </p>
-                          <p className="text-xs text-brand-muted max-w-xs font-medium">
-                            Proceed to run your assessment modules inside the VR display. Once completed, check off this lesson below.
-                          </p>
-                          <button
-                            onClick={() => setVrStatus("idle")}
-                            className="text-xs text-brand-muted hover:text-brand-text underline cursor-pointer"
-                          >
-                            Reset Scenario
-                          </button>
-                        </div>
-                      )}
                     </div>
                   )}
 

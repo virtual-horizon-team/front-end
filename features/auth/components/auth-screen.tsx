@@ -83,12 +83,12 @@ export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | 
     };
 
     return (
-        <main className="min-h-screen w-full flex items-center justify-center bg-white select-none">
+        <main className="min-h-screen w-full flex items-center justify-center bg-background select-none">
             {/* Centered Max-Width Wrapper: Locks layout columns together on extreme viewports/zoom levels */}
-            <div className="w-full max-w-[1600px] flex flex-col lg:flex-row min-h-screen items-stretch relative bg-white">
+            <div className="w-full max-w-[1600px] flex flex-col lg:flex-row min-h-screen items-stretch relative bg-background">
                 
                 {/* Left Side (VR Image Card) - Original dimensions and properties (no overflow-hidden to preserve 3D pop-out image) */}
-                <div className="hidden lg:flex lg:w-[45%] xl:w-[40%] relative bg-[#4f66fb] flex-col m-4 lg:m-6 xl:m-8 rounded-[40px] shadow-2xl z-10 shrink-0">
+                <div className="hidden lg:flex lg:w-[45%] xl:w-[40%] relative bg-brand-primary flex-col m-4 lg:m-6 xl:m-8 rounded-[40px] shadow-2xl z-10 shrink-0">
                     {/* Topographic Background Pattern */}
                     <div 
                         className="absolute inset-0 opacity-20 pointer-events-none"
@@ -99,8 +99,8 @@ export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | 
 
                     {/* Text Container: max-width locks text line breaks and prevents word reflow when scaling/zooming */}
                     <div className="relative z-10 w-full max-w-[480px] p-12 lg:p-14 xl:p-20 pb-0">
-                        <h2 className="text-4xl lg:text-5xl font-bold mb-4 tracking-tight text-white leading-tight">Lorem Ipsum is simply</h2>
-                        <p className="text-white/90 text-xl lg:text-2xl font-medium">Lorem Ipsum is simply</p>
+                        <h2 className="text-4xl lg:text-5xl font-bold mb-4 tracking-tight text-white leading-tight">Step into a New Reality</h2>
+                        <p className="text-white/90 text-xl lg:text-2xl font-medium">Experience immersive learning with Virtual Horizon.</p>
                     </div>
 
                     <div className="relative flex-1 w-full mt-8 pointer-events-none">
@@ -154,18 +154,18 @@ export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | 
                     <div className="w-full max-w-[420px] mx-auto flex flex-col">
                         {/* Logo */}
                         <div className="flex items-center justify-center gap-2 mb-12">
-                            <Gamepad2 className="w-8 h-8 text-[#4f66fb]" />
-                            <span className="text-2xl font-bold text-[#4f66fb]">Virtual Horizon</span>
+                            <Gamepad2 className="w-8 h-8 text-brand-primary" />
+                            <span className="text-2xl font-bold text-brand-primary">Virtual Horizon</span>
                         </div>
 
                         {/* Toggle */}
-                        <div className="bg-[#eef2ff] p-1.5 rounded-full flex items-center mb-8 shadow-inner border border-blue-50/50">
+                        <div className="bg-brand-soft p-1.5 rounded-full flex items-center mb-8 shadow-inner border border-brand-border">
                             <button
                                 onClick={() => handleModeSwitch("login")}
                                 className={`flex-1 py-2.5 text-sm font-semibold rounded-full transition-all duration-300 cursor-pointer ${
                                     mode === "login" 
-                                    ? "bg-[#4f66fb] text-white shadow-md" 
-                                    : "text-blue-900/60 hover:text-blue-900"
+                                    ? "bg-brand-primary text-white shadow-md" 
+                                    : "text-brand-muted hover:text-brand-text"
                                 }`}
                             >
                                 Login
@@ -174,8 +174,8 @@ export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | 
                                 onClick={() => handleModeSwitch("register")}
                                 className={`flex-1 py-2.5 text-sm font-semibold rounded-full transition-all duration-300 cursor-pointer ${
                                     mode === "register" 
-                                    ? "bg-[#4f66fb] text-white shadow-md" 
-                                    : "text-blue-900/60 hover:text-blue-900"
+                                    ? "bg-brand-primary text-white shadow-md" 
+                                    : "text-brand-muted hover:text-brand-text"
                                 }`}
                             >
                                 Register
@@ -183,19 +183,19 @@ export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | 
                         </div>
 
                         {/* Description */}
-                        <p className="text-slate-500 text-sm mb-8 leading-relaxed">
-                            Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+                        <p className="text-brand-muted text-sm mb-8 leading-relaxed">
+                            Sign in to access your virtual courses, manage your progress, and explore a universe of interactive learning.
                         </p>
 
                         {/* Login Form */}
                         {mode === "login" && (
                             <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6 animate-in slide-in-from-right-4 fade-in duration-300">
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-slate-700">User name</label>
+                                    <label className="text-sm font-medium text-brand-text">User name</label>
                                     <input
                                         {...loginForm.register("userName")}
                                         placeholder="Enter your User name"
-                                        className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#4f66fb]/20 focus:border-[#4f66fb] transition-all"
+                                        className="w-full h-12 px-4 rounded-xl border border-brand-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
                                     />
                                     {loginForm.formState.errors.userName && (
                                         <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/> {loginForm.formState.errors.userName.message}</p>
@@ -203,18 +203,18 @@ export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | 
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-slate-700">Password</label>
+                                    <label className="text-sm font-medium text-brand-text">Password</label>
                                     <div className="relative">
                                         <input
                                             {...loginForm.register("password")}
                                             type={showPassword ? "text" : "password"}
                                             placeholder="Enter your Password"
-                                            className="w-full h-12 pl-4 pr-12 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#4f66fb]/20 focus:border-[#4f66fb] transition-all"
+                                            className="w-full h-12 pl-4 pr-12 rounded-xl border border-brand-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
                                         />
                                         <button 
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-muted cursor-pointer"
                                         >
                                             {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                                         </button>
@@ -225,15 +225,15 @@ export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | 
                                 </div>
 
                                 <div className="flex items-center justify-between text-sm">
-                                    <label className="flex items-center gap-2 cursor-pointer text-slate-600">
+                                    <label className="flex items-center gap-2 cursor-pointer text-brand-muted">
                                         <input 
                                             type="checkbox" 
                                             {...loginForm.register("rememberMe")}
-                                            className="w-4 h-4 rounded border-slate-300 text-[#4f66fb] focus:ring-[#4f66fb]" 
+                                            className="w-4 h-4 rounded border-slate-300 text-brand-primary focus:ring-brand-primary" 
                                         />
                                         Remember me
                                     </label>
-                                    <Link href="#" className="text-slate-600 hover:text-[#4f66fb] transition-colors">
+                                    <Link href="#" className="text-brand-muted hover:text-brand-primary transition-colors">
                                         Forgot Password ?
                                     </Link>
                                 </div>
@@ -248,7 +248,7 @@ export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | 
                                 <button
                                     type="submit"
                                     disabled={isPending}
-                                    className="w-full h-12 bg-[#4f66fb] text-white rounded-xl font-semibold shadow-lg shadow-[#4f66fb]/30 hover:bg-[#4357d6] hover:shadow-xl transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-8 cursor-pointer"
+                                    className="w-full h-12 bg-brand-primary text-white rounded-xl font-semibold shadow-lg shadow-brand-primary/30 hover:bg-brand-hover hover:shadow-xl transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-8 cursor-pointer"
                                 >
                                     {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Login"}
                                 </button>
@@ -261,50 +261,50 @@ export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | 
                                 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-sm font-medium text-slate-700">Full Name</label>
+                                        <label className="text-sm font-medium text-brand-text">Full Name</label>
                                         <input
                                             {...registerForm.register("name")}
                                             placeholder="John Doe"
-                                            className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#4f66fb]/20 focus:border-[#4f66fb] transition-all"
+                                            className="w-full h-12 px-4 rounded-xl border border-brand-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
                                         />
                                         {registerForm.formState.errors.name && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/> {registerForm.formState.errors.name.message}</p>}
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-sm font-medium text-slate-700">User name</label>
+                                        <label className="text-sm font-medium text-brand-text">User name</label>
                                         <input
                                             {...registerForm.register("userName")}
                                             placeholder="johndoe123"
-                                            className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#4f66fb]/20 focus:border-[#4f66fb] transition-all"
+                                            className="w-full h-12 px-4 rounded-xl border border-brand-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
                                         />
                                         {registerForm.formState.errors.userName && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/> {registerForm.formState.errors.userName.message}</p>}
                                     </div>
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-slate-700">Email Address</label>
+                                    <label className="text-sm font-medium text-brand-text">Email Address</label>
                                     <input
                                         {...registerForm.register("email")}
                                         type="email"
                                         placeholder="john@example.com"
-                                        className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#4f66fb]/20 focus:border-[#4f66fb] transition-all"
+                                        className="w-full h-12 px-4 rounded-xl border border-brand-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
                                     />
                                     {registerForm.formState.errors.email && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/> {registerForm.formState.errors.email.message}</p>}
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-sm font-medium text-slate-700">Password</label>
+                                        <label className="text-sm font-medium text-brand-text">Password</label>
                                         <div className="relative">
                                             <input
                                                 {...registerForm.register("password")}
                                                 type={showPassword ? "text" : "password"}
                                                 placeholder="••••••••"
-                                                className="w-full h-12 pl-4 pr-10 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#4f66fb]/20 focus:border-[#4f66fb] transition-all"
+                                                className="w-full h-12 pl-4 pr-10 rounded-xl border border-brand-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
                                             />
                                             <button 
                                                 type="button"
                                                 onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-muted cursor-pointer"
                                             >
                                                 {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
                                             </button>
@@ -312,18 +312,18 @@ export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | 
                                         {registerForm.formState.errors.password && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/> {registerForm.formState.errors.password.message}</p>}
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-sm font-medium text-slate-700">Confirm Password</label>
+                                        <label className="text-sm font-medium text-brand-text">Confirm Password</label>
                                         <div className="relative">
                                             <input
                                                 {...registerForm.register("confirmPassword")}
                                                 type={showConfirmPassword ? "text" : "password"}
                                                 placeholder="••••••••"
-                                                className="w-full h-12 pl-4 pr-10 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#4f66fb]/20 focus:border-[#4f66fb] transition-all"
+                                                className="w-full h-12 pl-4 pr-10 rounded-xl border border-brand-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
                                             />
                                             <button 
                                                 type="button"
                                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-muted cursor-pointer"
                                             >
                                                 {showConfirmPassword ? <Eye size={16} /> : <EyeOff size={16} />}
                                             </button>
@@ -334,10 +334,10 @@ export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | 
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-sm font-medium text-slate-700">Country</label>
+                                        <label className="text-sm font-medium text-brand-text">Country</label>
                                         <select
                                             {...registerForm.register("country")}
-                                            className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#4f66fb]/20 focus:border-[#4f66fb] transition-all"
+                                            className="w-full h-12 px-4 rounded-xl border border-brand-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
                                         >
                                             <option value="">Select Country</option>
                                             <option value="Albania">Albania</option>
@@ -349,10 +349,10 @@ export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | 
                                         {registerForm.formState.errors.country && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/> {registerForm.formState.errors.country.message}</p>}
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-sm font-medium text-slate-700">Gender</label>
+                                        <label className="text-sm font-medium text-brand-text">Gender</label>
                                         <select
                                             {...registerForm.register("gender")}
-                                            className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#4f66fb]/20 focus:border-[#4f66fb] transition-all"
+                                            className="w-full h-12 px-4 rounded-xl border border-brand-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
                                         >
                                             <option value="Male">Male</option>
                                             <option value="Female">Female</option>
@@ -378,7 +378,7 @@ export function AuthScreen({ initialMode = "login" }: { initialMode?: "login" | 
                                 <button
                                     type="submit"
                                     disabled={isPending}
-                                    className="w-full h-12 bg-[#4f66fb] text-white rounded-xl font-semibold shadow-lg shadow-[#4f66fb]/30 hover:bg-[#4357d6] hover:shadow-xl transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-8 cursor-pointer"
+                                    className="w-full h-12 bg-brand-primary text-white rounded-xl font-semibold shadow-lg shadow-brand-primary/30 hover:bg-brand-hover hover:shadow-xl transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-8 cursor-pointer"
                                 >
                                     {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Create Account"}
                                 </button>

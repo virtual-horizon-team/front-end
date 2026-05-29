@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Check, FileText, Download, Play, Flame, HelpCircle, BookOpen } from "lucide-react";
 import { CourseDetailDto, CourseLessonDto } from "@/features/courses/types";
 
+
 interface StudyRoomTabsProps {
   course: CourseDetailDto;
   activeLesson: CourseLessonDto;
@@ -201,24 +202,37 @@ export default function StudyRoomTabs({
 
       {activeTab === "lesson-details" && (
         <div className="space-y-4 animate-fade-in pt-2">
-          <div className="bg-brand-soft/60 border border-brand-border/60 rounded-2xl p-6">
+          {/* Header card — always shown */}
+          <div className="bg-brand-soft/60 border border-brand-border/60 rounded-2xl p-5">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-brand-peach border border-brand-primary/20 text-brand-primary rounded-xl mt-0.5">
                 {getLessonIcon(activeLesson.resourceType)}
               </div>
               <div>
                 <h3 className="text-lg font-black text-brand-text mb-1">{activeLesson.title}</h3>
-                <p className="text-xs text-brand-muted font-bold uppercase tracking-wider mb-4">
+                <p className="text-xs text-brand-muted font-bold uppercase tracking-wider">
                   Type: {activeLesson.resourceType} • Duration: {activeLesson.durationMinutes ? `${activeLesson.durationMinutes} min` : "Self-paced"}
-                </p>
-                <p className="text-sm text-brand-muted leading-relaxed">
-                  This lesson is item #{activeLesson.orderIndex} in the curriculum sections. 
-                  Make sure to fully read the documentation, watch the streaming lectures, or solve all quiz assessments. 
-                  Once finished, make sure to click "Mark Lesson Complete" to check it off your progress sheet.
                 </p>
               </div>
             </div>
           </div>
+
+          {/* Scenario: text card */}
+          {activeLesson.resourceType === "Scenario" ? (
+            <div className="bg-brand-soft/40 border border-brand-border/60 rounded-2xl p-5">
+              <p className="text-sm text-brand-muted">
+                This is an immersive VR scenario lesson. Launch it using the VR player above. Complete the scenario tasks inside your headset, then mark it complete.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-brand-soft/40 border border-brand-border/60 rounded-2xl p-5">
+              <p className="text-sm text-brand-muted leading-relaxed">
+                This lesson is item #{activeLesson.orderIndex} in the curriculum sections. 
+                Make sure to fully read the documentation, watch the streaming lectures, or solve all quiz assessments. 
+                Once finished, click &quot;Mark Lesson Complete&quot; to check it off your progress.
+              </p>
+            </div>
+          )}
         </div>
       )}
 

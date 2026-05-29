@@ -27,6 +27,8 @@ import {
 import { CourseDetailDto } from "../types";
 import { useCartStore } from "@/features/cart/hooks/useCartStore";
 import LessonPreviewModal from "./lesson-preview-modal";
+import CourseInstructors from "./course-instructors";
+import CourseReviews from "./course-reviews";
 
 interface SessionData {
   userId?: string;
@@ -457,109 +459,19 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
               </div>
             )}
 
-            {/* TAB CONTENT: Instructors */}
             {activeTab === "instructor" && (
-              <div className="bg-white p-6 md:p-8 rounded-xl border border-brand-border shadow-sm space-y-8 animate-fade-in">
-                <h2 className="font-serif text-[24px] text-brand-navy font-normal mb-6">Your Instructors</h2>
-                <div className="space-y-8">
-                  {course.instructors && course.instructors.map((inst) => (
-                    <div key={inst.id} className="flex flex-col md:flex-row gap-6 items-start">
-                      {inst.avatarUrl ? (
-                        <img
-                          className="w-24 h-24 rounded-full object-cover border-2 border-brand-border shadow-sm"
-                          src={inst.avatarUrl}
-                          alt={inst.fullName}
-                        />
-                      ) : (
-                        <div className="w-24 h-24 rounded-full bg-brand-peach text-brand-primary flex items-center justify-center font-bold text-2xl border-2 border-brand-border shadow-sm">
-                          {inst.fullName.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-
-                      <div className="flex-1">
-                        <h3 className="font-serif text-[20px] text-brand-primary mb-1 font-normal">
-                          {inst.fullName}
-                        </h3>
-                        <p className="text-sm text-brand-muted mb-3 font-medium">Instructor</p>
-
-                        <div className="flex gap-6 mb-4 text-xs font-sans text-brand-muted">
-                          <div className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-brand-primary text-base" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                            <span className="font-semibold text-brand-text">{inst.averageRating || "4.9"}</span> Rating
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-brand-primary text-base">school</span>
-                            <span className="font-semibold text-brand-text">10,000+</span> Students
-                          </div>
-                        </div>
-
-                        <p className="text-[15px] text-brand-muted leading-relaxed whitespace-pre-line">
-                          {inst.bio || "An experienced educator specializing in Virtual Horizon curricula, bringing professional insight and deep knowledge to guide students through real-world applications."}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <CourseInstructors instructors={course.instructors} />
             )}
 
-            {/* TAB CONTENT: Reviews */}
             {activeTab === "reviews" && (
-              <div className="bg-white p-6 md:p-8 rounded-xl border border-brand-border shadow-sm space-y-8 animate-fade-in">
-                <h2 className="font-serif text-[24px] text-brand-navy font-normal mb-6">Student Reviews</h2>
-
-                {course.reviews && course.reviews.length > 0 ? (
-                  <div className="space-y-6">
-                    {course.reviews.map((review) => (
-                      <div key={review.id} className="p-5 border border-brand-border rounded-xl">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex items-center gap-3">
-                            {review.userAvatarUrl ? (
-                              <img
-                                className="w-10 h-10 rounded-full object-cover"
-                                src={review.userAvatarUrl}
-                                alt={review.userName}
-                              />
-                            ) : (
-                              <div className="w-10 h-10 rounded-full bg-brand-peach text-brand-primary flex items-center justify-center font-bold">
-                                {review.userName.slice(0, 2).toUpperCase()}
-                              </div>
-                            )}
-                            <div>
-                              <p className="font-semibold text-brand-text text-sm">{review.userName}</p>
-                              <div className="flex text-yellow-400 mt-0.5">
-                                {Array.from({ length: 5 }).map((_, i) => (
-                                  <span
-                                    key={i}
-                                    className="material-symbols-outlined text-sm leading-none"
-                                    style={{ fontVariationSettings: i < review.rating ? "'FILL' 1" : "'FILL' 0" }}
-                                  >
-                                    star
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-xs text-brand-muted">
-                            {new Date(review.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <p className="text-[15px] text-brand-muted leading-relaxed italic">
-                          "{review.comment}"
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 px-6">
-                    <span className="material-symbols-outlined text-brand-primary text-5xl mb-4 leading-none">rate_review</span>
-                    <h3 className="font-serif text-lg text-brand-navy font-normal mb-2">No reviews yet</h3>
-                    <p className="text-sm text-brand-muted max-w-sm mx-auto">
-                      There are no reviews for this course yet. Be the first to share your learning experience once you enroll!
-                    </p>
-                  </div>
-                )}
-              </div>
+              <CourseReviews 
+                courseId={course.id}
+                session={session}
+                isEnrolled={course.isEnrolled}
+                initialReviews={course.reviews}
+                courseRating={course.averageRating}
+                courseTotalReviews={course.totalReviews}
+              />
             )}
           </div>
 

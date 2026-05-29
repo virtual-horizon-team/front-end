@@ -63,6 +63,9 @@ export interface CourseLessonDto {
   durationMinutes: number | null;
   isPreview: boolean;
   resourceType?: CourseResourceType;
+  /** The underlying resource ID (e.g. scenarioId for Scenario lessons) */
+  resourceId?: string | null;
+  scenarioId?: string | null;
   progress?: {
     lessonId: string;
     watchedSeconds: number;
@@ -91,12 +94,42 @@ export interface InstructorDetailDto {
 
 export interface CourseReviewDto {
   id: string;
-  userId: string;
-  userName: string;
-  userAvatarUrl: string | null;
+  courseId?: string;
+  userId?: string;
+  userName?: string;
+  studentName?: string;
+  userAvatarUrl?: string | null;
+  studentAvatarUrl?: string | null;
   rating: number;
-  comment: string;
+  comment: string | null;
   createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CourseReviewRequest {
+  rating: number;
+  comment?: string;
+}
+
+export interface ProfileResult {
+  profileId: string;
+  profileType: string;
+  userId: string;
+  name: string;
+  bio: string | null;
+  phone: string | null;
+  country: string;
+  gender: string;
+  avatarUrl: string | null;
+  linkedinUrl: string | null;
+  portfolioUrl: string | null;
+  totalEnrollments: number;
+  yearsOfExperience: number | null;
+  averageRating: number | null;
+  totalReview: number | null;
+  requestId: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
 }
 
 export interface CourseDetailDto {

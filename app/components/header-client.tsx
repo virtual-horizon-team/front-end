@@ -8,12 +8,14 @@ import { API_BASE_URL } from "@/lib/config";
 import { getAccessToken } from "@/features/auth/lib/get-access-token";
 import { logoutUser } from "@/features/auth/actions/logout";
 import { CartBadge } from "@/features/cart/components/CartBadge";
+import { ThemeToggle } from "./theme-toggle";
 
 interface SessionData {
   userId?: string;
   userName: string;
   email?: string;
   isInstructor?: boolean;
+  isAdmin?: boolean;
 }
 
 interface HeaderClientProps {
@@ -73,6 +75,7 @@ export default function HeaderClient({ session }: HeaderClientProps) {
     { name: "Find Courses", href: "/courses" },
     ...(!session?.isInstructor ? [{ name: "Teach on Virtual Horizon", href: "/teach" }] : []),
     { name: "Scholarships", href: "/scholarships" },
+    { name: "Pair Device", href: "/pair-device" },
     { name: "Community", href: "/community" },
   ];
 
@@ -85,7 +88,7 @@ export default function HeaderClient({ session }: HeaderClientProps) {
   };
 
   return (
-    <header className="bg-white border-b border-brand-border sticky top-0 w-full z-50 shadow-sm">
+    <header className="bg-background border-b border-brand-border sticky top-0 w-full z-50 shadow-sm">
       <div className="flex justify-between items-center px-6 w-full h-16">
         {/* Left Section: Brand Logo & Navigation */}
         <div className="flex items-center gap-10">
@@ -107,7 +110,7 @@ export default function HeaderClient({ session }: HeaderClientProps) {
               return (
                 <Link
                   key={link.name}
-                  href={link.href === "/courses" || link.href === "/teach" ? link.href : "#"}
+                  href={link.href}
                   className={`text-[16px] leading-6 font-medium transition-all duration-200 ${isActive
                       ? "text-brand-primary font-bold border-b-2 border-brand-primary pb-1"
                       : "text-brand-muted hover:text-brand-primary"
@@ -124,7 +127,8 @@ export default function HeaderClient({ session }: HeaderClientProps) {
         <div className="hidden md:flex items-center gap-6">
           {session ? (
             <div className="flex items-center gap-4">
-              {!session.isInstructor && <CartBadge />}
+              <ThemeToggle />
+              <CartBadge />
               <div className="relative group py-2">
                 <Link
                   href="/profile"
@@ -146,7 +150,7 @@ export default function HeaderClient({ session }: HeaderClientProps) {
                 </Link>
 
                 {/* Dropdown Menu (Hover Triggered) */}
-                <div className="absolute right-0 top-full pt-1.5 w-48 bg-white border border-brand-border rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="absolute right-0 top-full pt-1.5 w-48 bg-background border border-brand-border rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                   <div className="py-1">
                     <Link
                       href="/profile"
@@ -162,10 +166,18 @@ export default function HeaderClient({ session }: HeaderClientProps) {
                     </Link>
                     {session.isInstructor && (
                       <Link
-                        href="/instructor"
+                        href="/instructor/dashboard"
                         className="block px-4 py-2 text-sm text-brand-text hover:bg-brand-soft hover:text-brand-primary transition-colors font-medium"
                       >
                         Instructor Dashboard
+                      </Link>
+                    )}
+                    {session.isAdmin && (
+                      <Link
+                        href="/admin"
+                        className="block px-4 py-2 text-sm text-brand-text hover:bg-brand-soft hover:text-brand-primary transition-colors font-medium"
+                      >
+                        Admin Dashboard
                       </Link>
                     )}
                     <hr className="border-brand-border my-1" />
@@ -181,6 +193,7 @@ export default function HeaderClient({ session }: HeaderClientProps) {
             </div>
           ) : (
             <div className="flex items-center gap-6">
+              <ThemeToggle />
               <Link
                 href="/login"
                 className="text-brand-muted hover:text-brand-primary text-[14px] font-semibold transition-colors"
@@ -198,7 +211,8 @@ export default function HeaderClient({ session }: HeaderClientProps) {
         </div>
 
         {/* Mobile Menu Button */}
-        <div className="md:hidden flex items-center">
+        <div className="md:hidden flex items-center gap-2">
+          <ThemeToggle />
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="text-brand-text hover:text-brand-primary p-2 focus:outline-none"
@@ -215,7 +229,7 @@ export default function HeaderClient({ session }: HeaderClientProps) {
 
       {/* Mobile Dropdown Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-brand-border bg-white w-full py-4 px-6 flex flex-col gap-4 animate-in slide-in-from-top duration-300">
+        <div className="md:hidden border-t border-brand-border bg-background w-full py-4 px-6 flex flex-col gap-4 animate-in slide-in-from-top duration-300">
           <nav className="flex flex-col gap-3">
             {navLinks.map((link) => {
               const isFindCourses = link.name === "Find Courses";
@@ -225,7 +239,7 @@ export default function HeaderClient({ session }: HeaderClientProps) {
               return (
                 <Link
                   key={link.name}
-                  href={link.href === "/courses" || link.href === "/teach" ? link.href : "#"}
+                  href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`text-[15px] font-medium py-1 transition-colors ${isActive ? "text-brand-primary font-bold" : "text-brand-muted"
                     }`}

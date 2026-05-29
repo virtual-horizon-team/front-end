@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { X, Download, Smartphone, LogIn, PlayCircle, Zap } from "lucide-react";
 
 interface LaunchVRModalProps {
@@ -8,6 +9,7 @@ interface LaunchVRModalProps {
 }
 
 export default function LaunchVRModal({ onClose }: LaunchVRModalProps) {
+    const router = useRouter();
     // Prevent scrolling when modal is open
     useEffect(() => {
         document.body.style.overflow = "hidden";
@@ -107,10 +109,13 @@ export default function LaunchVRModal({ onClose }: LaunchVRModalProps) {
                         Close
                     </button>
                     <button
-                        onClick={onClose}
+                        onClick={() => {
+                            onClose();
+                            router.push("/pair-device");
+                        }}
                         className="px-5 py-2.5 rounded-xl bg-brand-primary text-white font-semibold hover:bg-brand-hover active:scale-95 transition-all text-sm shadow-sm flex items-center gap-2"
                     >
-                        I understand, let's go
+                        Go to Pair Device
                     </button>
                 </div>
             </div>
