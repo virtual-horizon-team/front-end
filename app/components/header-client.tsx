@@ -74,7 +74,7 @@ export default function HeaderClient({ session }: HeaderClientProps) {
   const navLinks = [
     { name: "Find Courses", href: "/courses" },
     ...(!session?.isInstructor ? [{ name: "Teach on Virtual Horizon", href: "/teach" }] : []),
-    { name: "Scholarships", href: "/scholarships" },
+    { name: "Products", href: "/products" },
     { name: "Pair Device", href: "/pair-device" },
     { name: "Community", href: "/community" },
   ];

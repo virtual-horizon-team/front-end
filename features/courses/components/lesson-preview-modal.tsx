@@ -110,23 +110,23 @@ export default function LessonPreviewModal({
     docContentType.includes("ms-");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
-      <div className="bg-[#0f1115] text-white rounded-2xl w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col h-[85vh] border border-white/10 relative animate-in scale-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 bg-black/75 backdrop-blur-md animate-fade-in">
+      <div className="bg-[#0f1115] text-white w-full max-w-5xl h-full md:h-[85vh] rounded-none md:rounded-2xl shadow-2xl overflow-hidden flex flex-col border-0 md:border border-white/10 relative animate-in scale-in duration-200">
         
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-[#161a22]">
+        <div className="px-4 py-3 md:px-6 md:py-4 border-b border-white/10 flex items-center justify-between bg-[#161a22]">
           <div className="min-w-0 pr-4">
-            <span className="text-[10px] text-brand-primary bg-brand-peach/10 border border-brand-primary/20 px-2 py-0.5 rounded font-bold uppercase tracking-wider inline-block mb-1.5">
+            <span className="text-[9px] md:text-[10px] text-brand-primary bg-brand-peach/10 border border-brand-primary/20 px-2 py-0.5 rounded font-bold uppercase tracking-wider inline-block mb-1">
               Course Preview
             </span>
-            <h2 className="text-xl font-bold text-white truncate">
+            <h2 className="text-base md:text-xl font-bold text-white truncate">
               {courseTitle}
             </h2>
-            <p className="text-sm text-slate-400 truncate mt-0.5">
+            <p className="text-xs md:text-sm text-slate-400 truncate mt-0.5">
               Now playing: <span className="font-medium text-slate-200">{lessonTitle}</span>
             </p>
           </div>
-
+ 
           <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={onClose}
@@ -137,9 +137,9 @@ export default function LessonPreviewModal({
             </button>
           </div>
         </div>
-
+ 
         {/* Modal Body / Viewer & Playlist */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           
           {/* Main Viewer Area */}
           <div className="flex-1 bg-black/60 relative flex items-center justify-center overflow-hidden">
@@ -286,7 +286,7 @@ export default function LessonPreviewModal({
 
           {/* Playlist Sidebar */}
           {previewableLessons && previewableLessons.length > 0 && (
-            <div className="w-80 bg-[#161a22] border-l border-white/10 flex flex-col h-full overflow-hidden shrink-0">
+            <div className="w-full md:w-80 bg-[#161a22] border-t md:border-t-0 md:border-l border-white/10 flex flex-col h-48 md:h-full overflow-hidden shrink-0">
                <div className="p-4 border-b border-white/10 bg-[#0f1115]">
                  <h4 className="font-semibold text-sm">Course Previews</h4>
                  <p className="text-xs text-slate-400 mt-1">{previewableLessons.length} lessons available</p>
