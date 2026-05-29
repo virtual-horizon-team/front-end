@@ -2,20 +2,20 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { 
-  Star, 
-  Clock, 
-  User, 
-  BookOpen, 
-  Sparkles, 
-  Award, 
-  Share2, 
-  Gift, 
-  Check, 
-  Play, 
-  ChevronDown, 
-  ChevronUp, 
-  Lock, 
+import {
+  Star,
+  Clock,
+  User,
+  BookOpen,
+  Sparkles,
+  Award,
+  Share2,
+  Gift,
+  Check,
+  Play,
+  ChevronDown,
+  ChevronUp,
+  Lock,
   Info,
   Tv,
   Bookmark,
@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { CourseDetailDto } from "../types";
 import { useCartStore } from "@/features/cart/hooks/useCartStore";
+import LessonPreviewModal from "./lesson-preview-modal";
 
 interface SessionData {
   userId?: string;
@@ -43,15 +44,18 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
   const [activeSectionId, setActiveSectionId] = useState<string | null>(
     course.sections && course.sections.length > 0 ? course.sections[0].id : null
   );
-  
+
   const [isFavorite, setIsFavorite] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [enrollmentStatus, setEnrollmentStatus] = useState<"idle" | "loading" | "enrolled">("idle");
+  const [enrollmentStatus, setEnrollmentStatus] = useState<"idle" | "loading" | "enrolled">(
+    course.isEnrolled ? "enrolled" : "idle"
+  );
   const [activeTab, setActiveTab] = useState<"overview" | "content" | "instructor" | "reviews">("overview");
 
   const { addItem, cart, fetchCart } = useCartStore();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  
+  const [previewLesson, setPreviewLesson] = useState<{ id: string; title: string; resourceType: string } | null>(null);
+
   useEffect(() => {
     if (session) {
       fetchCart();
@@ -59,6 +63,15 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
   }, [session, fetchCart]);
 
   const isAlreadyInCart = cart?.items.some(item => item.id === course.id) || false;
+
+  const previewableLessons = course.sections
+    ?.flatMap((section) => section.lessons || [])
+    .filter((lesson) => lesson.isPreview && (lesson.resourceType === "Video" || lesson.resourceType === "Document"))
+    .map((lesson) => ({
+      id: lesson.id,
+      title: lesson.title,
+      resourceType: lesson.resourceType || "Video",
+    })) || [];
 
   const handleAddToCart = async () => {
     if (!session) {
@@ -161,7 +174,7 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
         {/* Ambient light glow */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-primary/20 rounded-full blur-3xl pointer-events-none" />
-        
+
         <div className="max-w-container-max mx-auto px-6 relative z-10">
           <div className="grid md:grid-cols-12 gap-8 items-center">
             <div className="md:col-span-8">
@@ -224,48 +237,44 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
       {/* 2. Main Two-Column Layout */}
       <section className="max-w-container-max mx-auto px-6 -mt-16 md:-mt-24 relative z-20">
         <div className="flex flex-col md:grid md:grid-cols-12 gap-8">
-          
+
           {/* A. Left Content Column */}
           <div className="md:col-span-8 space-y-8 order-2 md:order-1">
             {/* Quick Navigation Tabs (For high premium look) */}
             <div className="bg-white rounded-xl border border-brand-border p-1 shadow-sm flex overflow-x-auto scrollbar-none sticky top-[72px] z-30">
               <button
                 onClick={() => setActiveTab("overview")}
-                className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all duration-200 whitespace-nowrap ${
-                  activeTab === "overview"
+                className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all duration-200 whitespace-nowrap ${activeTab === "overview"
                     ? "bg-brand-primary text-white shadow-sm"
                     : "text-brand-muted hover:text-brand-text hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 Overview
               </button>
               <button
                 onClick={() => setActiveTab("content")}
-                className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all duration-200 whitespace-nowrap ${
-                  activeTab === "content"
+                className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all duration-200 whitespace-nowrap ${activeTab === "content"
                     ? "bg-brand-primary text-white shadow-sm"
                     : "text-brand-muted hover:text-brand-text hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 Course Content
               </button>
               <button
                 onClick={() => setActiveTab("instructor")}
-                className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all duration-200 whitespace-nowrap ${
-                  activeTab === "instructor"
+                className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all duration-200 whitespace-nowrap ${activeTab === "instructor"
                     ? "bg-brand-primary text-white shadow-sm"
                     : "text-brand-muted hover:text-brand-text hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 Instructors
               </button>
               <button
                 onClick={() => setActiveTab("reviews")}
-                className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all duration-200 whitespace-nowrap ${
-                  activeTab === "reviews"
+                className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all duration-200 whitespace-nowrap ${activeTab === "reviews"
                     ? "bg-brand-primary text-white shadow-sm"
                     : "text-brand-muted hover:text-brand-text hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 Reviews
               </button>
@@ -308,6 +317,32 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
                         </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {/* 4. Tags Section */}
+                {((course.tags && course.tags.length > 0) || true) && (
+                  <div className="bg-white p-6 md:p-8 rounded-xl border border-brand-border shadow-sm">
+                    <div className="flex flex-wrap gap-2">
+                      {(course.tags && course.tags.length > 0
+                        ? course.tags
+                        : [
+                            course.categoryName || "General",
+                            course.level,
+                            course.language || "English",
+                            "Virtual Reality",
+                            "Interactive",
+                          ]
+                      ).map((tag, i) => (
+                        <Link
+                          key={i}
+                          href={`/courses?search=${encodeURIComponent(tag)}`}
+                          className="bg-brand-soft border border-brand-border text-brand-muted hover:text-brand-primary hover:border-brand-primary/30 px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer select-none"
+                        >
+                          #{tag}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -353,25 +388,49 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
 
                         {/* Accordion content with CSS transitions */}
                         <div
-                          className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                            isOpen ? "max-h-[1500px] border-t border-brand-border" : "max-h-0"
-                          }`}
+                          className={`transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? "max-h-[1500px] border-t border-brand-border" : "max-h-0"
+                            }`}
                         >
                           <div className="p-5 bg-white space-y-4">
                             {section.lessons && section.lessons.map((lesson) => {
                               const iconName = getResourceIcon(lesson.resourceType);
                               const durationText = getLessonDurationText(lesson);
+                              const isLessonPreview = lesson.isPreview && (lesson.resourceType === "Video" || lesson.resourceType === "Document");
                               return (
-                                <div key={lesson.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 group/lesson py-1">
+                                <div
+                                  key={lesson.id}
+                                  onClick={() => {
+                                    if (isLessonPreview) {
+                                      setPreviewLesson({
+                                        id: lesson.id,
+                                        title: lesson.title,
+                                        resourceType: lesson.resourceType || "Video",
+                                      });
+                                    }
+                                  }}
+                                  className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 group/lesson py-1.5 px-2 rounded-lg transition-all ${
+                                    isLessonPreview
+                                      ? "cursor-pointer hover:bg-brand-peach/5 border border-transparent hover:border-brand-primary/10"
+                                      : ""
+                                  }`}
+                                >
                                   <div className="flex items-start sm:items-center gap-3">
-                                    <span className="material-symbols-outlined text-brand-muted group-hover/lesson:text-brand-primary transition-colors text-[20px] shrink-0 mt-0.5 sm:mt-0">
+                                    <span className={`material-symbols-outlined transition-colors text-[20px] shrink-0 mt-0.5 sm:mt-0 ${
+                                      isLessonPreview
+                                        ? "text-brand-primary group-hover/lesson:scale-110"
+                                        : "text-brand-muted group-hover/lesson:text-brand-primary"
+                                    }`}>
                                       {iconName}
                                     </span>
-                                    <span className="text-brand-text group-hover/lesson:text-brand-primary transition-colors text-[15px] pr-4">
+                                    <span className={`transition-colors text-[15px] pr-4 ${
+                                      isLessonPreview
+                                        ? "text-brand-navy font-medium group-hover/lesson:text-brand-primary"
+                                        : "text-brand-text group-hover/lesson:text-brand-primary"
+                                    }`}>
                                       {lesson.title}
                                     </span>
-                                    {lesson.isPreview && (
-                                      <span className="text-[10px] bg-brand-peach text-brand-primary px-2 py-0.5 rounded font-bold uppercase tracking-wider shrink-0 mt-0.5 sm:mt-0">
+                                    {isLessonPreview && (
+                                      <span className="text-[10px] bg-brand-peach text-brand-primary px-2.5 py-0.5 rounded font-bold uppercase tracking-wider shrink-0 mt-0.5 sm:mt-0 shadow-sm animate-pulse">
                                         Preview
                                       </span>
                                     )}
@@ -380,6 +439,11 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
                                     <span className="text-sm text-brand-muted whitespace-nowrap">
                                       {durationText}
                                     </span>
+                                    {isLessonPreview && (
+                                      <span className="material-symbols-outlined text-brand-primary text-lg opacity-0 group-hover/lesson:opacity-100 transition-opacity">
+                                        visibility
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
                               );
@@ -401,9 +465,9 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
                   {course.instructors && course.instructors.map((inst) => (
                     <div key={inst.id} className="flex flex-col md:flex-row gap-6 items-start">
                       {inst.avatarUrl ? (
-                        <img 
+                        <img
                           className="w-24 h-24 rounded-full object-cover border-2 border-brand-border shadow-sm"
-                          src={inst.avatarUrl} 
+                          src={inst.avatarUrl}
                           alt={inst.fullName}
                         />
                       ) : (
@@ -411,13 +475,13 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
                           {inst.fullName.charAt(0).toUpperCase()}
                         </div>
                       )}
-                      
+
                       <div className="flex-1">
                         <h3 className="font-serif text-[20px] text-brand-primary mb-1 font-normal">
                           {inst.fullName}
                         </h3>
                         <p className="text-sm text-brand-muted mb-3 font-medium">Instructor</p>
-                        
+
                         <div className="flex gap-6 mb-4 text-xs font-sans text-brand-muted">
                           <div className="flex items-center gap-1">
                             <span className="material-symbols-outlined text-brand-primary text-base" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
@@ -443,7 +507,7 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
             {activeTab === "reviews" && (
               <div className="bg-white p-6 md:p-8 rounded-xl border border-brand-border shadow-sm space-y-8 animate-fade-in">
                 <h2 className="font-serif text-[24px] text-brand-navy font-normal mb-6">Student Reviews</h2>
-                
+
                 {course.reviews && course.reviews.length > 0 ? (
                   <div className="space-y-6">
                     {course.reviews.map((review) => (
@@ -451,9 +515,9 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
                         <div className="flex justify-between items-start mb-4">
                           <div className="flex items-center gap-3">
                             {review.userAvatarUrl ? (
-                              <img 
+                              <img
                                 className="w-10 h-10 rounded-full object-cover"
-                                src={review.userAvatarUrl} 
+                                src={review.userAvatarUrl}
                                 alt={review.userName}
                               />
                             ) : (
@@ -465,9 +529,9 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
                               <p className="font-semibold text-brand-text text-sm">{review.userName}</p>
                               <div className="flex text-yellow-400 mt-0.5">
                                 {Array.from({ length: 5 }).map((_, i) => (
-                                  <span 
-                                    key={i} 
-                                    className="material-symbols-outlined text-sm leading-none" 
+                                  <span
+                                    key={i}
+                                    className="material-symbols-outlined text-sm leading-none"
                                     style={{ fontVariationSettings: i < review.rating ? "'FILL' 1" : "'FILL' 0" }}
                                   >
                                     star
@@ -502,7 +566,7 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
           {/* B. Right Sidebar Column (Sticky Buy Box) */}
           <div className="md:col-span-4 relative order-1 md:order-2">
             <div className="md:sticky md:top-[96px] bg-white border border-brand-border rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300">
-              
+
               {/* Media Thumbnail with hover overlay preview */}
               <div className="relative group overflow-hidden aspect-video">
                 {course.thumbnailUrl ? (
@@ -516,7 +580,14 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
                     VH
                   </div>
                 )}
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-90 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer">
+                <div 
+                  className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300 ${previewableLessons.length > 0 ? "opacity-90 group-hover:opacity-100 cursor-pointer" : "opacity-0 hidden"}`}
+                  onClick={() => {
+                    if (previewableLessons.length > 0) {
+                      setPreviewLesson(previewableLessons[0]);
+                    }
+                  }}
+                >
                   <div className="bg-white/10 hover:bg-white/20 p-4 rounded-full backdrop-blur-md border border-white/20 scale-95 group-hover:scale-100 transition-all duration-300">
                     <Play className="text-white fill-white w-8 h-8" />
                   </div>
@@ -570,13 +641,13 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
                       <div className="text-center">
                         <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-800 text-sm font-semibold flex items-center justify-center gap-2 mb-4">
                           <span className="material-symbols-outlined text-[20px] leading-none text-emerald-600">check_circle</span>
-                          Enrolled Successfully!
+                          You are enrolled!
                         </div>
                         <Link
-                          href={`/courses/${course.id}`}
+                          href={`/my-courses/${course.id}`}
                           className="block w-full bg-emerald-600 text-white py-3.5 rounded-lg font-semibold hover:bg-emerald-700 active:scale-[0.98] transition-all text-center text-[16px]"
                         >
-                          Go to Course
+                          Go to Study Room
                         </Link>
                       </div>
                     )}
@@ -584,12 +655,18 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
                 ) : (
                   <>
                     {enrollmentStatus === "enrolled" ? (
-                      <Link
-                        href={`/courses/${course.id}`}
-                        className="block w-full bg-emerald-600 text-white py-3.5 rounded-lg font-semibold hover:bg-emerald-700 active:scale-[0.98] transition-all text-center text-[16px]"
-                      >
-                        Go to Course
-                      </Link>
+                      <div className="text-center">
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-800 text-sm font-semibold flex items-center justify-center gap-2 mb-4">
+                          <span className="material-symbols-outlined text-[20px] leading-none text-emerald-600">check_circle</span>
+                          You own this course!
+                        </div>
+                        <Link
+                          href={`/my-courses/${course.id}`}
+                          className="block w-full bg-emerald-600 text-white py-3.5 rounded-lg font-semibold hover:bg-emerald-700 active:scale-[0.98] transition-all text-center text-[16px] mb-4"
+                        >
+                          Go to Study Room
+                        </Link>
+                      </div>
                     ) : isAlreadyInCart ? (
                       <Link
                         href="/cart"
@@ -620,11 +697,10 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
                 {enrollmentStatus !== "enrolled" && (
                   <button
                     onClick={handleBookmarkToggle}
-                    className={`w-full mt-3 border py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.98] duration-200 text-sm ${
-                      isFavorite 
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700" 
+                    className={`w-full mt-3 border py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.98] duration-200 text-sm ${isFavorite
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                         : "border-brand-border text-brand-primary hover:bg-brand-peach/10"
-                    }`}
+                      }`}
                   >
                     <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: isFavorite ? "'FILL' 1" : "'FILL' 0" }}>
                       {isFavorite ? "bookmark" : "bookmark_add"}
@@ -640,7 +716,7 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
                     <span className="material-symbols-outlined text-brand-primary text-[20px]">schedule</span>
                     <span>{formatDuration(course.totalDurationMinutes)} of on-demand video</span>
                   </div>
-                  
+
                   {course.totalLectures > 0 && (
                     <div className="flex items-center gap-3">
                       <span className="material-symbols-outlined text-brand-primary text-[20px]">play_circle</span>
@@ -652,7 +728,7 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
                     <div className="flex items-center gap-3 text-brand-navy font-medium">
                       <span className="material-symbols-outlined text-emerald-600 text-[20px]">view_in_ar</span>
                       <span className="flex items-center gap-1.5">
-                        Interactive VR Lab Scenarios 
+                        Interactive VR Lab Scenarios
                         <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
                           VR
                         </span>
@@ -673,7 +749,7 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
 
                 {/* Share and Gift */}
                 <div className="mt-8 pt-6 border-t border-brand-border flex justify-center gap-8 text-[14px]">
-                  <button 
+                  <button
                     onClick={handleShareClick}
                     className="text-brand-primary hover:text-brand-hover font-semibold flex items-center gap-1.5 transition-colors"
                   >
@@ -697,7 +773,7 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
           <div className="bg-white rounded-xl max-w-md w-full p-6 border border-brand-border shadow-2xl relative animate-slide-in-right">
             <h3 className="font-serif text-xl text-brand-navy mb-4 font-normal">Share this course</h3>
             <p className="text-sm text-brand-muted mb-4">Copy the course URL to share it with your friends and colleagues.</p>
-            
+
             <div className="flex gap-2">
               <input
                 type="text"
@@ -726,6 +802,19 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
             </button>
           </div>
         </div>
+      )}
+
+      {/* Lesson Preview Modal */}
+      {previewLesson && (
+        <LessonPreviewModal
+          lessonId={previewLesson.id}
+          lessonTitle={previewLesson.title}
+          resourceType={previewLesson.resourceType}
+          courseTitle={course.title}
+          previewableLessons={previewableLessons}
+          onSelectLesson={(lesson) => setPreviewLesson(lesson)}
+          onClose={() => setPreviewLesson(null)}
+        />
       )}
     </div>
   );

@@ -27,13 +27,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function CourseDetailPage({ params }: PageProps) {
   const { id } = await params;
   const session = await getSession();
-  
+
   try {
     const course = await getCourseDetails(id);
     return <CourseDetailsClient course={course} session={session} />;
   } catch (error) {
     console.error("Failed to load course details:", error);
-    
+
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 bg-brand-bg px-6">
         <span className="material-symbols-outlined text-brand-primary text-6xl leading-none">error</span>

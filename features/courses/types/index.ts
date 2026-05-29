@@ -63,6 +63,13 @@ export interface CourseLessonDto {
   durationMinutes: number | null;
   isPreview: boolean;
   resourceType?: CourseResourceType;
+  progress?: {
+    lessonId: string;
+    watchedSeconds: number;
+    isCompleted: boolean;
+    completedAt: string | null;
+    lastWatchedAt: string | null;
+  } | null;
 }
 
 export interface CourseSectionDto {
@@ -118,4 +125,5 @@ export interface CourseDetailDto {
   tags: string[];
   categoryName: string | null;
   reviews: CourseReviewDto[];
+  isEnrolled?: boolean | null;
 }

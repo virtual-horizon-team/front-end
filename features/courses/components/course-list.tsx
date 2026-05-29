@@ -136,11 +136,10 @@ export default function CourseList({
           <button
             onClick={handlePrevPage}
             disabled={currentPage === 1}
-            className={`w-10 h-10 flex items-center justify-center rounded-lg border transition-all ${
-              currentPage === 1
+            className={`w-10 h-10 flex items-center justify-center rounded-lg border transition-all ${currentPage === 1
                 ? "border-brand-border text-brand-soft cursor-not-allowed bg-white"
                 : "border-brand-border text-brand-text hover:bg-brand-soft/40 cursor-pointer bg-white"
-            }`}
+              }`}
           >
             <span className="material-symbols-outlined text-[20px] leading-none">
               chevron_left
@@ -169,11 +168,10 @@ export default function CourseList({
               <button
                 key={page}
                 onClick={() => onPageChange(page)}
-                className={`w-10 h-10 flex items-center justify-center rounded-lg text-sm font-bold transition-all ${
-                  isCurrent
+                className={`w-10 h-10 flex items-center justify-center rounded-lg text-sm font-bold transition-all ${isCurrent
                     ? "bg-brand-primary text-white shadow-sm"
                     : "border border-brand-border text-brand-text bg-white hover:bg-brand-soft/40 font-semibold"
-                }`}
+                  }`}
               >
                 {page}
               </button>
@@ -199,11 +197,10 @@ export default function CourseList({
           <button
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
-            className={`w-10 h-10 flex items-center justify-center rounded-lg border transition-all ${
-              currentPage === totalPages
+            className={`w-10 h-10 flex items-center justify-center rounded-lg border transition-all ${currentPage === totalPages
                 ? "border-brand-border text-brand-soft cursor-not-allowed bg-white"
                 : "border-brand-border text-brand-text hover:bg-brand-soft/40 cursor-pointer bg-white"
-            }`}
+              }`}
           >
             <span className="material-symbols-outlined text-[20px] leading-none">
               chevron_right

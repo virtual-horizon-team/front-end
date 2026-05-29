@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f3f4f6;
+  --background: #ffffff;
   --foreground: #1f2937;
 }
 
@@ -12,6 +12,9 @@
   --font-serif: var(--font-epilogue);
   --font-epilogue: var(--font-epilogue);
   --font-inter: var(--font-inter);
+
+  /* Page container — rem-based so it scales with zoom instead of stretching */
+  --width-container-max: 80rem;
 
   /* Brand Theme Custom Colors - Cool Slate & Crimson (Alternative 2) */
   --color-brand-primary: #a30014;
@@ -30,6 +33,12 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), sans-serif;
+}
+
+/* Container constraint — used by header, footer, and all page content */
+.max-w-container-max {
+  max-width: 85rem;
+  /* 1280px */
 }
 
 @keyframes slide-in-right {
@@ -76,4 +85,111 @@ body {
   background: linear-gradient(90deg, var(--color-brand-soft) 25%, #f9fafb 50%, var(--color-brand-soft) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.6s infinite linear;
+}
+
+/* ==========================================
+   Course Creator Steps Font Scaling
+   ========================================== */
+
+/* Outer wrapper */
+.course-steps-container {
+  font-size: 1.05rem;
+}
+
+/* Sidebar navigation */
+.course-steps-container nav button span {
+  font-size: 16px !important;
+  /* Scale up sidebar label from 14px */
+}
+
+.course-steps-container nav button div span {
+  font-size: 14px !important;
+  /* Scale up sidebar index badge text from 13px */
+}
+
+.course-steps-container nav button div svg {
+  width: 17px !important;
+  height: 17px !important;
+}
+
+.course-steps-container p.uppercase {
+  font-size: 13px !important;
+  /* Scale up 'Course Setup' header from 11px */
+  letter-spacing: 0.08em !important;
+}
+
+/* Step content container scaling rules */
+.course-editor-step-content {
+  font-size: 1.05rem;
+}
+
+/* Headers */
+.course-editor-step-content h2 {
+  font-size: 1.375rem !important;
+  /* Scale up Step Title from 18px */
+}
+
+.course-editor-step-content h3 {
+  font-size: 1.2rem !important;
+  /* Scale up section headers */
+}
+
+/* Sub-text / Helpers / Descriptions */
+.course-editor-step-content p {
+  font-size: 1rem !important;
+  /* Scale up standard text and descriptions */
+  line-height: 1.6 !important;
+}
+
+.course-editor-step-content p.text-brand-muted {
+  font-size: 0.95rem !important;
+  /* Scale description/subtext */
+}
+
+.course-editor-step-content p.text-xs,
+.course-editor-step-content p.text-red-500,
+.course-editor-step-content span.text-xs {
+  font-size: 0.9rem !important;
+  /* Scale helper details and validation errors from 12px */
+}
+
+/* Form Labels */
+.course-editor-step-content label {
+  font-size: 1rem !important;
+  /* Scale up labels from 14px */
+  font-weight: 500 !important;
+}
+
+/* Form Inputs, Textareas, Selects */
+.course-editor-step-content input[type="text"],
+.course-editor-step-content input[type="number"],
+.course-editor-step-content textarea,
+.course-editor-step-content select {
+  font-size: 1rem !important;
+  /* Scale up font size from 14px */
+  padding-top: 0.8rem !important;
+  padding-bottom: 0.8rem !important;
+  line-height: 1.5 !important;
+}
+
+.course-editor-step-content input[type="text"]::placeholder,
+.course-editor-step-content textarea::placeholder {
+  font-size: 1rem !important;
+}
+
+/* Buttons */
+.course-editor-step-content button {
+  font-size: 0.95rem !important;
+  /* Scale up buttons */
+}
+
+/* Objectives / Requirements Lists */
+.course-editor-step-content li span.text-sm {
+  font-size: 1rem !important;
+  /* Scale up list items text */
+}
+
+.course-editor-step-content li span.text-xs {
+  font-size: 0.875rem !important;
+  /* Scale up list index */
 }

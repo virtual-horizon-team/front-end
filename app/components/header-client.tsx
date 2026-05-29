@@ -86,7 +86,7 @@ export default function HeaderClient({ session }: HeaderClientProps) {
 
   return (
     <header className="bg-white border-b border-brand-border sticky top-0 w-full z-50 shadow-sm">
-      <div className="flex justify-between items-center max-w-container-max mx-auto px-6 w-full h-16">
+      <div className="flex justify-between items-center px-6 w-full h-16">
         {/* Left Section: Brand Logo & Navigation */}
         <div className="flex items-center gap-10">
           <Link href="/" className="flex items-center gap-2">
@@ -100,19 +100,18 @@ export default function HeaderClient({ session }: HeaderClientProps) {
             {navLinks.map((link) => {
               // Highlight "Find Courses" if we are on the courses page or homepage
               const isFindCourses = link.name === "Find Courses";
-              const isActive = isFindCourses 
-                ? (pathname === "/courses" || pathname === "/") 
+              const isActive = isFindCourses
+                ? (pathname === "/courses" || pathname === "/")
                 : pathname === link.href;
 
               return (
                 <Link
                   key={link.name}
                   href={link.href === "/courses" || link.href === "/teach" ? link.href : "#"}
-                  className={`text-[16px] leading-6 font-medium transition-all duration-200 ${
-                    isActive
+                  className={`text-[16px] leading-6 font-medium transition-all duration-200 ${isActive
                       ? "text-brand-primary font-bold border-b-2 border-brand-primary pb-1"
                       : "text-brand-muted hover:text-brand-primary"
-                  }`}
+                    }`}
                 >
                   {link.name}
                 </Link>
@@ -125,32 +124,60 @@ export default function HeaderClient({ session }: HeaderClientProps) {
         <div className="hidden md:flex items-center gap-6">
           {session ? (
             <div className="flex items-center gap-4">
-              <CartBadge />
-              <Link 
-                href="/profile"
-                className="text-[14px] font-semibold text-brand-text bg-brand-soft/50 hover:bg-brand-soft hover:text-brand-primary py-1 px-3 rounded-full border border-brand-border transition-all duration-150 flex items-center gap-2"
-              >
-                {avatarSrc ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img 
-                    src={avatarSrc}
-                    alt={session.userName}
-                    className="w-6 h-6 rounded-full object-cover border border-brand-border"
-                  />
-                ) : (
-                  <span className="w-6 h-6 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center text-[10px] font-bold uppercase border border-brand-primary/20">
-                    {session.userName.slice(0, 2)}
-                  </span>
-                )}
-                <span>{session.userName}</span>
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-1 text-brand-muted hover:text-brand-primary text-sm font-medium transition-colors"
-                title="Logout"
-              >
-                <LogOut className="w-4.5 h-4.5" />
-              </button>
+              {!session.isInstructor && <CartBadge />}
+              <div className="relative group py-2">
+                <Link
+                  href="/profile"
+                  className="text-[14px] font-semibold text-brand-text bg-brand-soft/50 hover:bg-brand-soft hover:text-brand-primary py-1.5 px-3 rounded-full border border-brand-border transition-all duration-150 flex items-center gap-2"
+                >
+                  {avatarSrc ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={avatarSrc}
+                      alt={session.userName}
+                      className="w-6 h-6 rounded-full object-cover border border-brand-border"
+                    />
+                  ) : (
+                    <span className="w-6 h-6 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center text-[10px] font-bold uppercase border border-brand-primary/20">
+                      {session.userName.slice(0, 2)}
+                    </span>
+                  )}
+                  <span>{session.userName}</span>
+                </Link>
+
+                {/* Dropdown Menu (Hover Triggered) */}
+                <div className="absolute right-0 top-full pt-1.5 w-48 bg-white border border-brand-border rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="py-1">
+                    <Link
+                      href="/profile"
+                      className="block px-4 py-2 text-sm text-brand-text hover:bg-brand-soft hover:text-brand-primary transition-colors font-medium"
+                    >
+                      My Profile
+                    </Link>
+                    <Link
+                      href="/my-courses"
+                      className="block px-4 py-2 text-sm text-brand-text hover:bg-brand-soft hover:text-brand-primary transition-colors font-medium"
+                    >
+                      My Courses
+                    </Link>
+                    {session.isInstructor && (
+                      <Link
+                        href="/instructor"
+                        className="block px-4 py-2 text-sm text-brand-text hover:bg-brand-soft hover:text-brand-primary transition-colors font-medium"
+                      >
+                        Instructor Dashboard
+                      </Link>
+                    )}
+                    <hr className="border-brand-border my-1" />
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-brand-soft hover:text-brand-primary transition-colors font-medium cursor-pointer"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="flex items-center gap-6">
@@ -192,17 +219,16 @@ export default function HeaderClient({ session }: HeaderClientProps) {
           <nav className="flex flex-col gap-3">
             {navLinks.map((link) => {
               const isFindCourses = link.name === "Find Courses";
-              const isActive = isFindCourses 
-                ? (pathname === "/courses" || pathname === "/") 
+              const isActive = isFindCourses
+                ? (pathname === "/courses" || pathname === "/")
                 : pathname === link.href;
               return (
                 <Link
                   key={link.name}
                   href={link.href === "/courses" || link.href === "/teach" ? link.href : "#"}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`text-[15px] font-medium py-1 transition-colors ${
-                    isActive ? "text-brand-primary font-bold" : "text-brand-muted"
-                  }`}
+                  className={`text-[15px] font-medium py-1 transition-colors ${isActive ? "text-brand-primary font-bold" : "text-brand-muted"
+                    }`}
                 >
                   {link.name}
                 </Link>
@@ -218,7 +244,7 @@ export default function HeaderClient({ session }: HeaderClientProps) {
                 <div className="flex items-center gap-3">
                   {avatarSrc ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img 
+                    <img
                       src={avatarSrc}
                       alt={session.userName}
                       className="w-10 h-10 rounded-full object-cover border border-brand-border"
@@ -246,6 +272,13 @@ export default function HeaderClient({ session }: HeaderClientProps) {
                   className="text-sm font-semibold text-brand-primary hover:text-brand-hover py-1 self-start"
                 >
                   My Profile
+                </Link>
+                <Link
+                  href="/my-courses"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-sm font-semibold text-brand-primary hover:text-brand-hover py-1 self-start"
+                >
+                  My Courses
                 </Link>
                 <button
                   onClick={() => {

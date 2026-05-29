@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer className="bg-white border-t border-brand-border py-8 w-full">
-      <div className="max-w-container-max mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="px-6 flex flex-col md:flex-row justify-between items-center gap-4">
         {/* Left copyright and logo info */}
         <div className="space-y-1 text-center md:text-left">
           <span className="font-bold text-[18px] text-brand-primary block">
