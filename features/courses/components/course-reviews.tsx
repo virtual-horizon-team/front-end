@@ -4,12 +4,7 @@ import { useState, useEffect } from "react";
 import { API_BASE_URL } from "@/lib/config";
 import { CourseReviewDto, PagedResult } from "../types";
 
-/** Read a cookie by name on the client side */
-function getClientCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-  return match ? decodeURIComponent(match[2]) : null;
-}
+import { getAccessToken } from "@/features/auth/lib/get-access-token";
 
 interface SessionData {
   userId?: string;
@@ -78,7 +73,7 @@ export default function CourseReviews({ courseId, session, isEnrolled, initialRe
   const fetchUserReview = async () => {
     setIsLoadingUserReview(true);
     try {
-      const token = getClientCookie("access_token");
+      const token = await getAccessToken();
       const res = await fetch(`${API_BASE_URL}/api/my-courses/${courseId}/review`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -112,7 +107,7 @@ export default function CourseReviews({ courseId, session, isEnrolled, initialRe
     setSubmitError(null);
     setIsSubmitting(true);
     try {
-      const token = getClientCookie("access_token");
+      const token = await getAccessToken();
       if (!token) throw new Error("Not logged in");
 
       const method = userReview ? "PUT" : "POST";
@@ -151,7 +146,7 @@ export default function CourseReviews({ courseId, session, isEnrolled, initialRe
     
     setIsSubmitting(true);
     try {
-      const token = getClientCookie("access_token");
+      const token = await getAccessToken();
       const res = await fetch(`${API_BASE_URL}/api/my-courses/${courseId}/review`, {
         method: "DELETE",
         headers: {
