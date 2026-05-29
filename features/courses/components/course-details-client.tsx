@@ -51,9 +51,9 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
 
   const { addItem, cart, fetchCart } = useCartStore();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-
+  
   useEffect(() => {
-    if (session && !session.isInstructor) {
+    if (session) {
       fetchCart();
     }
   }, [session, fetchCart]);
@@ -66,8 +66,9 @@ export default function CourseDetailsClient({ course, session }: CourseDetailsCl
       return;
     }
 
-    if (session.isInstructor) {
-      alert("Instructors cannot purchase courses.");
+    const isOwnCourse = course.instructors?.some(inst => inst.id === session.userId);
+    if (isOwnCourse) {
+      alert("You cannot purchase your own course.");
       return;
     }
 

@@ -125,7 +125,7 @@ export default function HeaderClient({ session }: HeaderClientProps) {
         <div className="hidden md:flex items-center gap-6">
           {session ? (
             <div className="flex items-center gap-4">
-              {!session.isInstructor && <CartBadge />}
+              <CartBadge />
               <Link 
                 href="/profile"
                 className="text-[14px] font-semibold text-brand-text bg-brand-soft/50 hover:bg-brand-soft hover:text-brand-primary py-1 px-3 rounded-full border border-brand-border transition-all duration-150 flex items-center gap-2"
@@ -233,15 +233,13 @@ export default function HeaderClient({ session }: HeaderClientProps) {
                     <span className="text-sm font-bold text-brand-text">{session.userName}</span>
                   </div>
                 </div>
-                {!session.isInstructor && (
-                  <Link
-                    href="/cart"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-sm font-semibold text-brand-primary hover:text-brand-hover py-1 self-start flex items-center gap-2"
-                  >
-                    My Cart
-                  </Link>
-                )}
+                <Link
+                  href="/cart"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-sm font-semibold text-brand-primary hover:text-brand-hover py-1 self-start flex items-center gap-2"
+                >
+                  My Cart
+                </Link>
                 <Link
                   href="/profile"
                   onClick={() => setIsMobileMenuOpen(false)}

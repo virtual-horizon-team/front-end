@@ -19,6 +19,7 @@ import {
     Info,
 } from "lucide-react";
 import { ScenarioDisplayDto, ScenarioMetadataResult } from "../types/scenario";
+import LaunchVRModal from "./LaunchVRModal";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -259,6 +260,7 @@ export default function ScenarioDetailClient({
     isInstructor,
 }: ScenarioDetailClientProps) {
     const toast = useToast();
+    const [showLaunchModal, setShowLaunchModal] = useState(false);
 
     // Build gallery: main thumbnail first, then unique additional images
     const galleryImages: string[] = [];
@@ -274,7 +276,7 @@ export default function ScenarioDetailClient({
     const status = metadata?.status ?? "Uploaded";
     const diffCls = difficultyClasses(difficultyLevel);
 
-    const handleLaunchVR = () => toast.show("VR launch requires a connected headset");
+    const handleLaunchVR = () => setShowLaunchModal(true);
 
     return (
         <div className="pt-12 lg:pt-0">
@@ -479,6 +481,11 @@ export default function ScenarioDetailClient({
                     </div>
                 </div>
             </div>
+
+            {/* Launch VR Modal */}
+            {showLaunchModal && (
+                <LaunchVRModal onClose={() => setShowLaunchModal(false)} />
+            )}
         </div>
     );
 }
