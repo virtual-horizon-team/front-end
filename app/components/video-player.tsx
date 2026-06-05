@@ -11,8 +11,30 @@ import {
   Settings,
   Loader2,
   ChevronUp,
+  Subtitles,
 } from "lucide-react";
 import Hls from "hls.js";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const createSasLoader = (sasToken: string) => {
+  return class SasLoader extends Hls.DefaultConfig.loader {
+    constructor(config: any) {
+      super(config);
+    }
+    load(context: any, config: any, callbacks: any) {
+      if (sasToken) {
+        const url = context.url;
+        if (url.indexOf("sv=") === -1) {
+          const separator = url.indexOf("?") === -1 ? "?" : "&";
+          const cleanToken = sasToken.startsWith("?") ? sasToken.substring(1) : sasToken;
+          context.url = url + separator + cleanToken;
+        }
+      }
+      super.load(context, config, callbacks);
+    }
+  };
+};
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export interface VideoPlayerProps {
   src: string;
@@ -53,7 +75,14 @@ export default function VideoPlayer({
 
   // Settings dropdowns
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [settingsTab, setSettingsTab] = useState<"main" | "quality" | "speed">("main");
+  const [settingsTab, setSettingsTab] = useState<"main" | "quality" | "speed" | "subtitles">("main");
+
+  // Transcript
+  const [transcriptUrl, setTranscriptUrl] = useState<string | null>(null);
+  const [isTranscriptEnabled, setIsTranscriptEnabled] = useState(false);
+  const [currentCueText, setCurrentCueText] = useState<string>("");
+  const [subtitleOffset, setSubtitleOffset] = useState<number>(10);
+  const [subtitleSize, setSubtitleSize] = useState<number>(100);
 
   // HLS Qualities
   const [levels, setLevels] = useState<HlsQualityLevel[]>([]);
@@ -127,6 +156,9 @@ export default function VideoPlayer({
         setError(null);
         setLevels([]);
         setCurrentLevel(-1);
+        setTranscriptUrl(null);
+        setIsTranscriptEnabled(false);
+        setCurrentCueText("");
       }
     });
 
@@ -151,27 +183,11 @@ export default function VideoPlayer({
         const urlObj = new URL(src);
         const sasToken = urlObj.search;
 
-        // Custom Hls loader to append SAS token to all sub-resource requests
-        class SasLoader extends Hls.DefaultConfig.loader {
-          constructor(config: any) {
-            super(config);
-          }
-          load(context: any, config: any, callbacks: any) {
-            if (sasToken) {
-              const url = context.url;
-              if (url.indexOf("sv=") === -1) {
-                const separator = url.indexOf("?") === -1 ? "?" : "&";
-                const cleanToken = sasToken.startsWith("?") ? sasToken.substring(1) : sasToken;
-                context.url = url + separator + cleanToken;
-              }
-            }
-            super.load(context, config, callbacks);
-          }
-        }
+        const SasLoaderClass = createSasLoader(sasToken);
 
         const hls = new Hls({
           debug: false,
-          loader: SasLoader,
+          loader: SasLoaderClass,
           xhrSetup: (xhr: XMLHttpRequest, url: string) => {
             if (sasToken && url.indexOf("sv=") === -1) {
               const separator = url.indexOf("?") === -1 ? "?" : "&";
@@ -261,6 +277,38 @@ export default function VideoPlayer({
     };
   }, [src, autoplay]);
 
+  // Check for transcript
+  useEffect(() => {
+    if (!src || !src.includes('master.m3u8')) {
+      Promise.resolve().then(() => setTranscriptUrl(null));
+      return;
+    }
+
+    let mounted = true;
+    const checkTranscript = async () => {
+      try {
+        const urlObj = new URL(src);
+        urlObj.pathname = urlObj.pathname.replace('master.m3u8', 'audio.vtt');
+        const vttUrl = urlObj.toString();
+        
+        const response = await fetch(vttUrl, { method: 'HEAD' });
+        if (mounted && response.ok) {
+          setTranscriptUrl(vttUrl);
+        } else if (mounted) {
+          setTranscriptUrl(null);
+        }
+      } catch (err) {
+        console.error("Failed to check transcript:", err);
+        if (mounted) {
+          setTranscriptUrl(null);
+        }
+      }
+    };
+
+    checkTranscript();
+    return () => { mounted = false; };
+  }, [src]);
+
   // Video Events
   const handlePlayPause = () => {
     const video = videoRef.current;
@@ -282,6 +330,25 @@ export default function VideoPlayer({
     setCurrentTime(video.currentTime);
     if (onTimeUpdate) {
       onTimeUpdate(video.currentTime, video.duration);
+    }
+
+    // Process custom subtitles reliably during playback
+    if (isTranscriptEnabled) {
+      const tracks = video.textTracks;
+      if (tracks && tracks.length > 0) {
+        const track = tracks[0];
+        const activeCues = track.activeCues;
+        if (activeCues && activeCues.length > 0) {
+          let text = "";
+          for (let i = 0; i < activeCues.length; i++) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            text += (activeCues[i] as any).text + "\n";
+          }
+          setCurrentCueText(text.trim());
+        } else {
+          setCurrentCueText("");
+        }
+      }
     }
   };
 
@@ -350,6 +417,20 @@ export default function VideoPlayer({
     } else {
       document.exitFullscreen();
       setIsFullscreen(false);
+    }
+    resetControlsTimeout();
+  };
+
+  const toggleTranscript = () => {
+    setIsTranscriptEnabled(!isTranscriptEnabled);
+    if (!isTranscriptEnabled) {
+      // Trying to enable
+      const video = videoRef.current;
+      if (video && video.textTracks && video.textTracks.length > 0) {
+        video.textTracks[0].mode = "hidden"; // Ensure it's hidden so we can read activeCues
+      }
+    } else {
+      setCurrentCueText("");
     }
     resetControlsTimeout();
   };
@@ -440,7 +521,38 @@ export default function VideoPlayer({
         onEnded={handleVideoEnded}
         controls={false}
         playsInline
-      />
+        crossOrigin="anonymous"
+      >
+        {transcriptUrl && (
+          <track
+            kind="subtitles"
+            src={transcriptUrl}
+            srcLang="en"
+            label="English"
+            default={false}
+            onLoad={(e) => {
+              const trackElement = e.target as HTMLTrackElement;
+              // Keep native track hidden to avoid rendering default browser subtitles
+              trackElement.track.mode = 'hidden';
+            }}
+          />
+        )}
+      </video>
+
+      {/* Custom Subtitles Overlay */}
+      {isTranscriptEnabled && currentCueText && (
+        <div
+          className="absolute left-0 right-0 flex justify-center pointer-events-none px-8 z-10 transition-all duration-75"
+          style={{ bottom: `${subtitleOffset}%` }}
+        >
+          <div 
+            className="bg-black/75 backdrop-blur-md text-white px-6 py-2 rounded-xl text-center w-full max-w-[95%] shadow-xl whitespace-pre-wrap font-medium tracking-wide"
+            style={{ fontSize: `${(subtitleSize / 100) * 1.125}rem`, lineHeight: 1.4 }}
+          >
+            {currentCueText}
+          </div>
+        </div>
+      )}
 
       {/* Big Playback Splash Overlays */}
       {!isPlaying && !isBuffering && !error && (
@@ -546,6 +658,21 @@ export default function VideoPlayer({
                 <Settings className="w-5 h-5" />
               </button>
 
+              <button
+                onClick={transcriptUrl ? toggleTranscript : undefined}
+                disabled={!transcriptUrl}
+                className={`p-1.5 rounded-lg transition-colors ml-1 ${
+                  !transcriptUrl
+                    ? "text-white/20 cursor-not-allowed"
+                    : isTranscriptEnabled
+                    ? "text-brand-primary bg-white/10 hover:bg-white/20"
+                    : "text-slate-200 hover:text-white hover:bg-white/10"
+                }`}
+                title={transcriptUrl ? "Toggle Transcript" : "No transcript available"}
+              >
+                <Subtitles className="w-5 h-5" />
+              </button>
+
               {isSettingsOpen && (
                 <div className="absolute bottom-full right-0 mb-2 w-48 bg-[#13151b] border border-white/10 rounded-xl shadow-2xl p-2 z-30 flex flex-col gap-1 text-sm select-none">
                   {settingsTab === "main" && (
@@ -577,7 +704,86 @@ export default function VideoPlayer({
                           <ChevronUp className="w-3.5 h-3.5 rotate-90" />
                         </span>
                       </button>
+
+                      {/* Subtitles Option */}
+                      <button
+                        onClick={transcriptUrl ? () => setSettingsTab("subtitles") : undefined}
+                        disabled={!transcriptUrl}
+                        className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between transition-colors mt-1 border-t border-white/5 pt-1 ${
+                          !transcriptUrl ? "opacity-50 cursor-not-allowed" : "hover:bg-white/5"
+                        }`}
+                      >
+                        <span>Subtitles</span>
+                        <span className="text-xs text-slate-400 flex items-center gap-1">
+                          {!transcriptUrl ? "Unavailable" : (isTranscriptEnabled ? "On" : "Off")}
+                          <ChevronUp className="w-3.5 h-3.5 rotate-90" />
+                        </span>
+                      </button>
                     </>
+                  )}
+
+                  {/* Subtitles Tab */}
+                  {settingsTab === "subtitles" && (
+                    <div className="flex flex-col gap-1">
+                      <button
+                        onClick={() => setSettingsTab("main")}
+                        className="text-xs text-brand-primary px-3 py-1 text-left font-semibold border-b border-white/5 mb-1"
+                      >
+                        ← Back
+                      </button>
+                      
+                      <div className="flex items-center justify-between px-3 py-2 mt-1">
+                        <span className="text-xs text-slate-300">Enable Subtitles</span>
+                        <button
+                          onClick={toggleTranscript}
+                          className={`w-10 h-5 rounded-full relative transition-colors ${
+                            isTranscriptEnabled ? "bg-brand-primary" : "bg-white/20"
+                          }`}
+                        >
+                          <div
+                            className={`absolute top-0.5 bottom-0.5 w-4 bg-white rounded-full transition-all shadow-sm ${
+                              isTranscriptEnabled ? "left-[calc(100%-1.125rem)]" : "left-0.5"
+                            }`}
+                          />
+                        </button>
+                      </div>
+
+                      {isTranscriptEnabled && (
+                        <div className="px-3 py-3 mt-1 border-t border-white/5 flex flex-col gap-4">
+                          {/* Position Slider */}
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs text-slate-300">Position</span>
+                              <span className="text-xs text-brand-primary font-mono">{subtitleOffset}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min={5}
+                              max={90}
+                              value={subtitleOffset}
+                              onChange={(e) => setSubtitleOffset(parseFloat(e.target.value))}
+                              className="w-full h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-brand-primary"
+                            />
+                          </div>
+
+                          {/* Size Slider */}
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs text-slate-300">Text Size</span>
+                              <span className="text-xs text-brand-primary font-mono">{subtitleSize}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min={50}
+                              max={250}
+                              value={subtitleSize}
+                              onChange={(e) => setSubtitleSize(parseFloat(e.target.value))}
+                              className="w-full h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-brand-primary"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   {/* Quality Select Tab */}
