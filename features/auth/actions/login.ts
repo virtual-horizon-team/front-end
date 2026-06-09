@@ -28,12 +28,41 @@ export const loginUser = async (values: LoginInput) => {
 
         const cookieStore = await cookies();
 
+        // Parse expiration — handle both numeric durations ("30") and ISO date strings ("2026-06-10T...")
+        const accessExpMinutes = response.accessTokenExpirationInMinutes;
+        const refreshExpDays = response.refreshTokenExpirationInDays;
+
+        let accessExpiry: Date;
+        let refreshExpiry: Date;
+
+        // If it's a pure number (e.g. "30"), treat as duration; otherwise treat as an ISO date string
+        if (!isNaN(Number(accessExpMinutes))) {
+            accessExpiry = new Date(Date.now() + (Number(accessExpMinutes) * 60 * 1000));
+        } else {
+            accessExpiry = new Date(accessExpMinutes);
+        }
+
+        if (!isNaN(Number(refreshExpDays))) {
+            refreshExpiry = new Date(Date.now() + (Number(refreshExpDays) * 24 * 60 * 60 * 1000));
+        } else {
+            refreshExpiry = new Date(refreshExpDays);
+        }
+
+        // Fallback: if parsing produced an invalid date, default to reasonable values
+        if (isNaN(accessExpiry.getTime())) {
+            accessExpiry = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+        }
+        if (isNaN(refreshExpiry.getTime())) {
+            refreshExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+        }
+
         cookieStore.set("access_token", response.accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
             path: "/",
-            ...(rememberMe ? { expires: new Date(response.accessTokenExpirationInMinutes) } : {})
+            // Access token: session cookie if not rememberMe, persistent otherwise
+            ...(rememberMe ? { expires: accessExpiry } : {})
         });
 
         cookieStore.set("refresh_token", response.refreshToken, {
@@ -41,7 +70,8 @@ export const loginUser = async (values: LoginInput) => {
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
             path: "/",
-            ...(rememberMe ? { expires: new Date(response.refreshTokenExpirationInDays) } : {})
+            // Refresh token: ALWAYS persistent so the session survives browser restarts
+            expires: refreshExpiry,
         });
 
         return { success: "Logged in successfully!", data: response };

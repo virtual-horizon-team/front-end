@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getSession } from "./features/auth/lib/get-session";
 import { jwtDecode } from "jwt-decode";
+import { API_BASE_URL } from "@/lib/config";
 
 interface DecodedToken {
     sub?: string;
@@ -14,9 +14,6 @@ interface DecodedToken {
     InstructorProfileId?: string;
 }
 
-/**
- * Robustly extracts roles from any SOAP namespace claim structure in JWT tokens.
- */
 function getUserRolesFromToken(token: string): string[] {
     if (!token) return [];
     try {
@@ -28,86 +25,143 @@ function getUserRolesFromToken(token: string): string[] {
             decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role"];
 
         if (!rawRoles) return [];
-
-        if (Array.isArray(rawRoles)) {
-            return rawRoles.map(r => r.toLowerCase());
-        }
-
+        if (Array.isArray(rawRoles)) return rawRoles.map(r => r.toLowerCase());
         if (typeof rawRoles === "string") {
-            if (rawRoles.includes(",")) {
-                return rawRoles.split(",").map(r => r.trim().toLowerCase());
-            }
-            return [rawRoles.trim().toLowerCase()];
+            return rawRoles.includes(",") 
+                ? rawRoles.split(",").map(r => r.trim().toLowerCase()) 
+                : [rawRoles.trim().toLowerCase()];
         }
+        return [];
+    } catch {
+        return [];
+    }
+}
 
-        return [];
-    } catch (e) {
-        return [];
+function isTokenExpired(token: string | undefined): boolean {
+    if (!token) return true;
+    try {
+        const decoded = jwtDecode<{ exp: number }>(token);
+        // إضافة هامش أمان (10 ثوانٍ) لتجنب انتهاء الـ Token أثناء معالجة الطلب
+        return Date.now() >= (decoded.exp * 1000) - 10000;
+    } catch {
+        return true;
     }
 }
 
 export async function middleware(request: NextRequest) {
-    const session = await getSession();
-    const isAuthPage = request.nextUrl.pathname.startsWith("/login") ||
-        request.nextUrl.pathname.startsWith("/register");
-    const isAdminPage = request.nextUrl.pathname.startsWith("/admin");
-    const isInstructorPage = request.nextUrl.pathname.startsWith("/instructor");
+    let accessToken = request.cookies.get("access_token")?.value;
+    const refreshToken = request.cookies.get("refresh_token")?.value;
+    const pathname = request.nextUrl.pathname;
 
-    if (session) {
-        const token = request.cookies.get("access_token")?.value || "";
+    const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/register");
+    const isAdminPage = pathname.startsWith("/admin");
+    const isInstructorPage = pathname.startsWith("/instructor");
+    const isProtectedRoute = isAdminPage || isInstructorPage || 
+        pathname.startsWith("/dashboard") || 
+        pathname === "/pair-device" || 
+        pathname.startsWith("/my-courses");
 
-        // Enforce administrative checks at the edge using access token claims
-        if (isAdminPage) {
-            const roles = getUserRolesFromToken(token);
-            const isAdmin = roles.includes("admin");
+    let response = NextResponse.next();
 
-            if (!isAdmin) {
-                // Return a standard 404 response redirect instead of revealing endpoint existence via /forbidden
-                return NextResponse.redirect(new URL("/404", request.url));
+    if (isTokenExpired(accessToken) && refreshToken) {
+        try {
+            const refreshRes = await fetch(`${API_BASE_URL.replace(/\/$/, "")}/api/Auth/Refresh`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(refreshToken),
+            });
+
+            if (refreshRes.ok) {
+                const data = await refreshRes.json();
+                accessToken = data.accessToken;
+
+                request.cookies.set("access_token", data.accessToken);
+                request.cookies.set("refresh_token", data.refreshToken);
+                const requestHeaders = new Headers(request.headers);
+                requestHeaders.set("cookie", request.cookies.getAll().map(c => `${c.name}=${c.value}`).join("; "));
+                
+                response = NextResponse.next({ request: { headers: requestHeaders } });
+
+                // Parse expiration — handle both numeric durations and ISO date strings
+                const accessExpMinutes = data.accessTokenExpirationInMinutes;
+                const refreshExpDays = data.refreshTokenExpirationInDays;
+
+                let accessExpiry: Date;
+                let refreshExpiry: Date;
+
+                if (!isNaN(Number(accessExpMinutes))) {
+                    accessExpiry = new Date(Date.now() + (Number(accessExpMinutes) * 60 * 1000));
+                } else {
+                    accessExpiry = new Date(accessExpMinutes);
+                }
+
+                if (!isNaN(Number(refreshExpDays))) {
+                    refreshExpiry = new Date(Date.now() + (Number(refreshExpDays) * 24 * 60 * 60 * 1000));
+                } else {
+                    refreshExpiry = new Date(refreshExpDays);
+                }
+
+                if (isNaN(accessExpiry.getTime())) {
+                    accessExpiry = new Date(Date.now() + 30 * 60 * 1000);
+                }
+                if (isNaN(refreshExpiry.getTime())) {
+                    refreshExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+                }
+
+                const cookieOptions = {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === "production",
+                    sameSite: "lax" as const,
+                    path: "/",
+                };
+
+                response.cookies.set("access_token", data.accessToken, { ...cookieOptions, expires: accessExpiry });
+                response.cookies.set("refresh_token", data.refreshToken, { ...cookieOptions, expires: refreshExpiry });
+            } else {
+                accessToken = undefined; // فشل التجديد
             }
+        } catch (error) {
+            accessToken = undefined; // فشل الاتصال بالخادم
+        }
+    }
+
+    // 2. التحقق من الصلاحيات إذا كان المستخدم مسجلاً للدخول
+    if (accessToken && !isTokenExpired(accessToken)) {
+        if (isAdminPage) {
+            const roles = getUserRolesFromToken(accessToken);
+            if (!roles.includes("admin")) return NextResponse.redirect(new URL("/404", request.url));
         }
 
-        // Enforce instructor checks at the edge using InstructorProfileId claim
         if (isInstructorPage) {
-            let isInstructor = false;
-            if (token) {
-                try {
-                    const decoded = jwtDecode<DecodedToken>(token);
-                    isInstructor = !!decoded.InstructorProfileId;
-                } catch (e) {}
-            }
-
-            if (!isInstructor) {
+            try {
+                const decoded = jwtDecode<DecodedToken>(accessToken);
+                if (!decoded.InstructorProfileId) return NextResponse.redirect(new URL("/forbidden", request.url));
+            } catch {
                 return NextResponse.redirect(new URL("/forbidden", request.url));
             }
         }
 
-        // Redirect away from auth pages if logged in
-        if (isAuthPage) {
-            return NextResponse.redirect(new URL("/", request.url));
-        }
-        return NextResponse.next();
+        if (isAuthPage) return NextResponse.redirect(new URL("/", request.url));
+
+        return response;
     }
 
-    // If no session but we're on an auth page, allow it
-    if (isAuthPage) {
-        return NextResponse.next();
+    // 3. التعامل مع المستخدم غير المسجل أو من فشل تجديد جلسته
+    if (isProtectedRoute) {
+        const loginUrl = new URL("/login", request.url);
+        loginUrl.searchParams.set("redirect", pathname + request.nextUrl.search);
+        
+        const redirectResponse = NextResponse.redirect(loginUrl);
+        // مسح الجلسة لضمان تنظيف المتصفح
+        redirectResponse.cookies.delete("access_token");
+        redirectResponse.cookies.delete("refresh_token");
+        
+        return redirectResponse;
     }
 
-    // No session and not on auth page - check if we have a refresh token
-    const refreshToken = request.cookies.get("refresh_token")?.value;
-
-    if (refreshToken) {
-        // We have a refresh token, redirect to a refresh page that will handle the refresh
-        const refreshUrl = new URL("/api/auth/refresh", request.url);
-        refreshUrl.searchParams.set("redirect", request.nextUrl.pathname + request.nextUrl.search);
-        return NextResponse.redirect(refreshUrl);
-    }
-
-    // No session and no refresh token - redirect to login
-    return NextResponse.redirect(new URL("/login", request.url));
+    return response;
 }
 
 export const config = {
-    matcher: ["/dashboard/:path*", "/instructor/:path*", "/admin/:path*", "/pair-device", "/login", "/register", "/my-courses/:path*"],
+    matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 };

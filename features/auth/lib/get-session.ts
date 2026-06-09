@@ -11,17 +11,57 @@ interface JWTPayload {
     InstructorProfileId?: string;
 }
 
-export async function getSession() {
+export async function getSession(skipRefresh = false) {
     const cookieStore = await cookies();
-    const token = cookieStore.get("access_token")?.value;
+    let token = cookieStore.get("access_token")?.value;
+
+    if (!token) {
+        if (skipRefresh) return null;
+
+        const refreshToken = cookieStore.get("refresh_token")?.value;
+        if (refreshToken) {
+            console.log("[getSession] Access token missing but refresh token exists. Attempting refresh...");
+            try {
+                const { refreshSession } = await import("./refresh-token");
+                const newToken = await refreshSession();
+                if (newToken) {
+                    token = newToken;
+                } else {
+                    return null;
+                }
+            } catch (e) {
+                console.error("[getSession] Failed to refresh session:", e);
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
 
     if (!token) return null;
 
     try {
-        const decoded = jwtDecode<JWTPayload>(token);
+        let decoded = jwtDecode<JWTPayload>(token);
 
         const isExpired = Date.now() >= decoded.exp * 1000;
-        if (isExpired) return null;
+        if (isExpired) {
+            if (skipRefresh) return null;
+
+            console.log("[getSession] Access token is expired. Attempting refresh...");
+            try {
+                const { refreshSession } = await import("./refresh-token");
+                const newToken = await refreshSession();
+                if (newToken) {
+                    token = newToken;
+                    decoded = jwtDecode<JWTPayload>(newToken);
+                } else {
+                    return null;
+                }
+            } catch (e) {
+                console.error("[getSession] Failed to refresh session:", e);
+                return null;
+            }
+        }
 
         const roles = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decoded.role || [];
         const rolesArray = Array.isArray(roles) ? roles : [roles];
