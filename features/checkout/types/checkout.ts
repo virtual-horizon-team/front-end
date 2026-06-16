@@ -1,6 +1,7 @@
 export interface StripeCheckoutRequest {
   success_url: string;      
   cancel_url: string;       
+  cart_type?: string;
   customer?: {
     first_name?: string;
     last_name?: string;

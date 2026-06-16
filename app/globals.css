@@ -12,6 +12,13 @@
   --color-brand-text: #1f2937;
   --color-brand-muted: #4b5563;
   --color-brand-peach: #fee2e2;
+
+  /* Marketplace Design System Variables (Option 2: Bright Coral/Rose Red) */
+  --marketplace-primary: #bf1834a3;
+  --marketplace-hover: #e60838;
+  --marketplace-bg: #090d16;
+  --marketplace-soft: #0f172a;
+  --marketplace-border: rgba(255, 255, 255, 0.08);
 }
 
 
@@ -36,6 +43,13 @@
   --color-brand-text: var(--color-brand-text);
   --color-brand-muted: var(--color-brand-muted);
   --color-brand-peach: var(--color-brand-peach);
+
+  /* Marketplace custom utility mappings */
+  --color-marketplace-primary: var(--marketplace-primary);
+  --color-marketplace-hover: var(--marketplace-hover);
+  --color-marketplace-bg: var(--marketplace-bg);
+  --color-marketplace-soft: var(--marketplace-soft);
+  --color-marketplace-border: var(--marketplace-border);
 }
 
 
@@ -47,8 +61,8 @@ body {
 
 /* Container constraint — used by header, footer, and all page content */
 .max-w-container-max {
-  max-width: 85rem;
-  /* 1280px */
+  max-width: 85rem !important;
+  /* 1360px */
 }
 
 @keyframes slide-in-right {

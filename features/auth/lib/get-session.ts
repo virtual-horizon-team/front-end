@@ -9,6 +9,7 @@ interface JWTPayload {
     "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"?: string | string[];
     role?: string | string[];
     InstructorProfileId?: string;
+    FreelancerProfileId?: string;
 }
 
 export async function getSession(skipRefresh = false) {
@@ -72,6 +73,7 @@ export async function getSession(skipRefresh = false) {
             userName: decoded.sub,
             email: decoded.email,
             isInstructor: !!decoded.InstructorProfileId,
+            isFreelancer: !!decoded.FreelancerProfileId,
             isAdmin: isAdmin,
         };
     } catch (error) {

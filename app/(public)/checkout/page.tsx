@@ -52,6 +52,7 @@ export default function CheckoutPage() {
       const request: StripeCheckoutRequest = {
         success_url: successUrl,
         cancel_url: cancelUrl,
+        cart_type: "Course",
       };
 
       const response = await initiateCheckout(request);

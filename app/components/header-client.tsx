@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, LogOut, Link2 } from "lucide-react";
+import { Menu, X, LogOut, Link2, Wallet } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
 import { getAccessToken } from "@/features/auth/lib/get-access-token";
 import { logoutUser } from "@/features/auth/actions/logout";
@@ -101,6 +101,46 @@ export default function HeaderClient({ session }: HeaderClientProps) {
           {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => {
+              // If it's Products, render a dropdown
+              if (link.name === "Products") {
+                const isActive = pathname.startsWith("/products") || pathname.startsWith("/marketplace");
+                return (
+                  <div key={link.name} className="relative group py-2">
+                    <button
+                      type="button"
+                      className={`text-[16px] leading-6 font-medium transition-all duration-200 cursor-pointer flex items-center gap-1 ${
+                        isActive
+                          ? "text-brand-primary font-bold border-b-2 border-brand-primary pb-0.5"
+                          : "text-brand-muted hover:text-brand-primary"
+                      }`}
+                    >
+                      Products
+                      <svg className="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {/* Products Dropdown List Wrapper */}
+                    <div className="absolute left-0 top-full pt-2 w-48 z-50 hidden group-hover:block animate-in fade-in duration-100">
+                      <div className="bg-white border border-brand-border rounded-xl shadow-xl py-1.5">
+                        <Link
+                          href="/products"
+                          className="block px-4 py-2.5 text-sm text-brand-muted hover:text-brand-primary hover:bg-brand-soft transition-colors font-semibold"
+                        >
+                          Products Catalog
+                        </Link>
+                        <Link
+                          href="/marketplace"
+                          className="block px-4 py-2.5 text-sm text-brand-muted hover:text-brand-primary hover:bg-brand-soft transition-colors font-semibold"
+                        >
+                          Asset Marketplace
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
               // Highlight "Find Courses" if we are on the courses page or homepage
               const isFindCourses = link.name === "Find Courses";
               const isActive = isFindCourses
@@ -112,8 +152,8 @@ export default function HeaderClient({ session }: HeaderClientProps) {
                   key={link.name}
                   href={link.href}
                   className={`text-[16px] leading-6 font-medium transition-all duration-200 ${isActive
-                      ? "text-brand-primary font-bold border-b-2 border-brand-primary pb-1"
-                      : "text-brand-muted hover:text-brand-primary"
+                    ? "text-brand-primary font-bold border-b-2 border-brand-primary pb-1"
+                    : "text-brand-muted hover:text-brand-primary"
                     }`}
                 >
                   {link.name}
@@ -125,9 +165,17 @@ export default function HeaderClient({ session }: HeaderClientProps) {
 
         {/* Right Section: Auth Buttons */}
         <div className="hidden md:flex items-center gap-6">
+
           {session ? (
             <div className="flex items-center gap-4">
               <ThemeToggle />
+              <Link
+                href="/wallet"
+                className="p-2 text-brand-muted hover:text-brand-primary transition-all duration-150 relative group flex items-center justify-center bg-brand-soft/30 hover:bg-brand-soft rounded-full border border-brand-border"
+                aria-label="My Wallet"
+              >
+                <Wallet className="w-5 h-5" />
+              </Link>
               <CartBadge />
               <div className="relative group py-2">
                 <Link
@@ -157,6 +205,18 @@ export default function HeaderClient({ session }: HeaderClientProps) {
                       className="block px-4 py-2 text-sm text-brand-text hover:bg-brand-soft hover:text-brand-primary transition-colors font-medium"
                     >
                       My Profile
+                    </Link>
+                    <Link
+                      href="/wallet"
+                      className="block px-4 py-2 text-sm text-brand-text hover:bg-brand-soft hover:text-brand-primary transition-colors font-medium"
+                    >
+                      My Wallet
+                    </Link>
+                    <Link
+                      href="/transactions"
+                      className="block px-4 py-2 text-sm text-brand-text hover:bg-brand-soft hover:text-brand-primary transition-colors font-medium"
+                    >
+                      Transaction Ledger
                     </Link>
                     <Link
                       href="/my-courses"
@@ -286,6 +346,20 @@ export default function HeaderClient({ session }: HeaderClientProps) {
                   className="text-sm font-semibold text-brand-primary hover:text-brand-hover py-1 self-start"
                 >
                   My Profile
+                </Link>
+                <Link
+                  href="/wallet"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-sm font-semibold text-brand-primary hover:text-brand-hover py-1 self-start"
+                >
+                  My Wallet
+                </Link>
+                <Link
+                  href="/transactions"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-sm font-semibold text-brand-primary hover:text-brand-hover py-1 self-start"
+                >
+                  Transaction Ledger
                 </Link>
                 <Link
                   href="/my-courses"

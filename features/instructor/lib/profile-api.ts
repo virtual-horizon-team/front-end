@@ -33,8 +33,16 @@ export interface UpdateProfileRequest {
 }
 
 export const profileApi = {
-    getProfile: () => {
-        return api<UserProfile>("/api/Profile");
+    getProfile: async () => {
+        try {
+            const manifest = await api<{ capabilities?: { isInstructor?: boolean } }>("/api/Profile/manifest");
+            const isInstructor = manifest?.capabilities?.isInstructor;
+            const endpoint = isInstructor ? "/api/Profile/me/instructor" : "/api/Profile/me/user";
+            return await api<UserProfile>(endpoint);
+        } catch (error) {
+            // Fallback to normal user endpoint
+            return await api<UserProfile>("/api/Profile/me/user");
+        }
     },
 
     updateProfile: (data: UpdateProfileRequest) => {

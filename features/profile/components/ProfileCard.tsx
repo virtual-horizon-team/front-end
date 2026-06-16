@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { User, Briefcase, Star, Clock, Upload, Loader2, ArrowRight, BookOpen, Award } from "lucide-react";
+import { User, Briefcase, Star, Clock, Upload, Loader2, ArrowRight, BookOpen, Award, Eye, X } from "lucide-react";
 import { UserProfile } from "@/features/instructor/lib/profile-api";
 
 interface ProfileCardProps {
@@ -28,12 +28,22 @@ export default function ProfileCard({
     getInitials,
     onShowRequests
 }: ProfileCardProps) {
+    const [showLightbox, setShowLightbox] = useState(false);
+
+    const handleContainerClick = () => {
+        if (!avatarUrl) {
+            onAvatarClick();
+        } else {
+            setShowLightbox(true);
+        }
+    };
+
     return (
         <div className="bg-white rounded-xl border border-brand-border p-6 shadow-sm flex flex-col items-center text-center">
             
             {/* Avatar Upload Container */}
             <div 
-                onClick={onAvatarClick}
+                onClick={handleContainerClick}
                 className="relative group w-28 h-28 rounded-full overflow-hidden border border-brand-border bg-brand-bg flex items-center justify-center cursor-pointer shadow-inner mb-4"
             >
                 {uploadingAvatar ? (
@@ -57,8 +67,8 @@ export default function ProfileCard({
 
                 {/* Hover Overlay */}
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity text-white text-[11px] font-semibold gap-1">
-                    <Upload size={16} />
-                    <span>Change Photo</span>
+                    <Eye size={16} />
+                    <span>View Photo</span>
                 </div>
             </div>
 
@@ -158,6 +168,41 @@ export default function ProfileCard({
                     </button>
                 )}
             </div>
+
+            {/* Full Image Lightbox Modal with Action Button */}
+            {showLightbox && (
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center z-50 animate-fade-in p-4">
+                    <button 
+                        onClick={() => setShowLightbox(false)}
+                        className="absolute top-6 right-6 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-2.5 rounded-full cursor-pointer transition-all"
+                        aria-label="Close Preview"
+                    >
+                        <X size={20} />
+                    </button>
+                    
+                    <div className="flex flex-col items-center gap-6 max-w-[90vw] max-h-[85vh]">
+                        <div className="overflow-hidden rounded-2xl border border-white/10 shadow-2xl relative max-w-full max-h-[70vh]">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img 
+                                src={avatarUrl} 
+                                alt={name || "User Avatar Full Size"} 
+                                className="w-full h-auto max-h-[70vh] object-contain mx-auto"
+                            />
+                        </div>
+                        
+                        <button
+                            onClick={() => {
+                                setShowLightbox(false);
+                                onAvatarClick();
+                            }}
+                            className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand-primary hover:bg-brand-hover text-white font-bold text-sm transition-all cursor-pointer shadow-lg shadow-brand-primary/20 active:scale-95 hover:scale-[1.01]"
+                        >
+                            <Upload size={15} />
+                            Change Photo
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -10,6 +10,7 @@ import {
     Settings,
     FileText,
     Activity,
+    Wallet,
     type LucideIcon,
 } from "lucide-react";
 
@@ -40,6 +41,12 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
             { label: "Course Reviews", href: "/admin/course-reviews", icon: BookOpen },
             { label: "Categories", href: "/admin/categories", icon: FolderTree },
             { label: "Promotion Coupons", icon: Percent, isComingSoon: true },
+        ]
+    },
+    {
+        title: "Finance & Wallets",
+        items: [
+            { label: "Platform Finance", href: "/admin/wallet", icon: Wallet }
         ]
     },
     {
