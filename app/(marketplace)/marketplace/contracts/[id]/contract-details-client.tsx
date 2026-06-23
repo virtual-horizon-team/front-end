@@ -25,11 +25,16 @@ interface ContractMilestoneDto {
   description: string | null;
   amount: number;
   orderIndex: number;
-  status: string | number; // 0 = Pending, 1 = Delivered, 2 = Revoked, 3 = Approved, 4 = Rejected
+  status: string | number;
   deliveredAt: string | null;
   approvedAt: string | null;
   revokedAt: string | null;
   deliveredAssetIds: string[];
+  
+  // New Escrow fields
+  isFunded: boolean;
+  fundedAt?: string | null;
+  revisionNote?: string | null;
 }
 
 interface JobContractDto {
@@ -75,8 +80,8 @@ const CONTRACT_STATUS_LABELS: Record<string | number, { text: string; css: strin
 };
 
 const MILESTONE_STATUS_LABELS: Record<string | number, { text: string; css: string; dot: string }> = {
-  0: { text: "Pending Work", css: "bg-slate-800 border-slate-700 text-slate-400", dot: "bg-slate-600" },
-  "Pending": { text: "Pending Work", css: "bg-slate-800 border-slate-700 text-slate-400", dot: "bg-slate-600" },
+  0: { text: "Pending Funding", css: "bg-slate-800 border-slate-700 text-slate-400", dot: "bg-slate-600" },
+  "Pending": { text: "Pending Funding", css: "bg-slate-800 border-slate-700 text-slate-400", dot: "bg-slate-600" },
   1: { text: "Delivered (Preview Active)", css: "bg-amber-500/10 border-amber-500/20 text-amber-400", dot: "bg-amber-500" },
   "Delivered": { text: "Delivered (Preview Active)", css: "bg-amber-500/10 border-amber-500/20 text-amber-400", dot: "bg-amber-500" },
   2: { text: "Preview Revoked", css: "bg-red-500/10 border-red-500/20 text-red-400", dot: "bg-red-500" },
@@ -84,7 +89,11 @@ const MILESTONE_STATUS_LABELS: Record<string | number, { text: string; css: stri
   3: { text: "Approved & Paid", css: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400", dot: "bg-emerald-500" },
   "Approved": { text: "Approved & Paid", css: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400", dot: "bg-emerald-500" },
   4: { text: "Rejected", css: "bg-red-500/10 border-red-500/20 text-red-400", dot: "bg-red-500" },
-  "Rejected": { text: "Rejected", css: "bg-red-500/10 border-red-500/20 text-red-400", dot: "bg-red-500" }
+  "Rejected": { text: "Rejected", css: "bg-red-500/10 border-red-500/20 text-red-400", dot: "bg-red-500" },
+  5: { text: "Funded (Awaiting Delivery)", css: "bg-blue-500/10 border-blue-500/20 text-blue-400", dot: "bg-blue-500" },
+  "Funded": { text: "Funded (Awaiting Delivery)", css: "bg-blue-500/10 border-blue-500/20 text-blue-400", dot: "bg-blue-500" },
+  6: { text: "Under Revision", css: "bg-orange-500/10 border-orange-500/20 text-orange-400", dot: "bg-orange-500" },
+  "UnderRevision": { text: "Under Revision", css: "bg-orange-500/10 border-orange-500/20 text-orange-400", dot: "bg-orange-500" },
 };
 
 export default function ContractDetailsClient({ contractId, session }: ContractDetailsClientProps) {
@@ -98,11 +107,19 @@ export default function ContractDetailsClient({ contractId, session }: ContractD
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   
+  // Wallet Balance
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+
   // Delivery Modal State
   const [deliveryModalMilestone, setDeliveryModalMilestone] = useState<ContractMilestoneDto | null>(null);
   const [selectedAssetId, setSelectedAssetId] = useState("");
   const [daysValid, setDaysValid] = useState("3");
   const [deliveryError, setDeliveryError] = useState<string | null>(null);
+
+  // Revision Modal State
+  const [revisionModalMilestone, setRevisionModalMilestone] = useState<ContractMilestoneDto | null>(null);
+  const [revisionNote, setRevisionNote] = useState("");
+  const [revisionError, setRevisionError] = useState<string | null>(null);
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
@@ -128,9 +145,89 @@ export default function ContractDetailsClient({ contractId, session }: ContractD
     }
   }, [contractId]);
 
+  const loadWalletBalance = useCallback(async () => {
+    try {
+      const wallet = await api<{ balance: number }>("api/Wallet/my-wallet");
+      setWalletBalance(wallet?.balance ?? 0);
+    } catch (e) {
+      console.warn("Failed to fetch wallet balance:", e);
+    }
+  }, []);
+
   useEffect(() => {
     loadContractDetails();
-  }, [loadContractDetails]);
+    loadWalletBalance();
+  }, [loadContractDetails, loadWalletBalance]);
+
+  const handleFundMilestone = async (milestoneId: string, title: string, amount: number) => {
+    if (walletBalance !== null && walletBalance < amount) {
+      const topupConfirm = window.confirm(
+        `Insufficient Wallet Balance!\n\nYour balance: $${walletBalance.toFixed(2)}\nMilestone cost: $${amount.toFixed(2)}\n\nWould you like to go to your wallet page to top up?`
+      );
+      if (topupConfirm) {
+        router.push("/wallet");
+      }
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to fund milestone '${title}' for $${amount.toFixed(2)}?\nThis will move the funds into platform escrow.`)) {
+      return;
+    }
+
+    setActionLoading(`fund-${milestoneId}`);
+    try {
+      await api<any>(`api/contracts/milestones/${milestoneId}/fund`, {
+        method: "POST"
+      });
+      showToast(`Milestone '${title}' funded successfully!`, "success");
+      loadContractDetails();
+      loadWalletBalance();
+    } catch (e: any) {
+      console.warn("Failed to fund milestone:", e);
+      showToast(e.message || "Failed to fund milestone.", "error");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleOpenRevisionModal = (milestone: ContractMilestoneDto) => {
+    setRevisionModalMilestone(milestone);
+    setRevisionNote("");
+    setRevisionError(null);
+  };
+
+  const handleCloseRevisionModal = () => {
+    setRevisionModalMilestone(null);
+    setRevisionError(null);
+  };
+
+  const handleSubmitRevision = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!revisionModalMilestone) return;
+    if (!revisionNote.trim()) {
+      setRevisionError("Please enter revision instructions.");
+      return;
+    }
+
+    setActionLoading("revising");
+    try {
+      await api<any>(`api/contracts/milestones/${revisionModalMilestone.id}/request-revision`, {
+        method: "POST",
+        body: JSON.stringify({
+          note: revisionNote
+        })
+      });
+
+      showToast(`Revision requested for '${revisionModalMilestone.title}'`, "success");
+      handleCloseRevisionModal();
+      loadContractDetails();
+    } catch (e: any) {
+      console.warn("Revision request failed:", e);
+      setRevisionError(e.message || "Revision request submission failed.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   // Load Freelancer Assets for Delivery Selector
   const loadFreelancerAssets = async () => {
@@ -281,7 +378,8 @@ Are you sure you want to proceed?`;
   }
 
   const contractStatusMeta = CONTRACT_STATUS_LABELS[contract.status] || { text: "Unknown", css: "bg-slate-500/10 text-slate-400" };
-  const approvedMilestonesCount = contract.milestones.filter(m => m.status === 3 || m.status === "Approved").length;
+  // Backend enum: Pending=0, Delivered=1, Revoked=2, Approved=3, Rejected=4, Funded=5, UnderRevision=6
+  const approvedMilestonesCount = contract.milestones.filter(m => m.status === "Approved" || m.status === 3).length;
   const progressPercent = Math.round((approvedMilestonesCount / contract.milestones.length) * 100) || 0;
 
   return (
@@ -337,7 +435,7 @@ Are you sure you want to proceed?`;
               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Released Escrow</span>
               <span className="text-base font-black text-emerald-400 flex items-center md:justify-end">
                 <DollarSign className="w-4 h-4 shrink-0 -ml-0.5" />
-                {contract.milestones.filter(m => m.status === 3 || m.status === "Approved").reduce((sum, m) => sum + m.amount, 0).toFixed(2)}
+              {contract.milestones.filter(m => m.status === "Approved" || m.status === 3).reduce((sum, m) => sum + m.amount, 0).toFixed(2)}
               </span>
             </div>
             <div className="bg-[#0a0f1d] border border-marketplace-border p-4 rounded-2xl flex flex-col justify-center min-w-36 md:text-right">
@@ -374,9 +472,13 @@ Are you sure you want to proceed?`;
           <div className="space-y-4">
             {contract.milestones.map((m, index) => {
               const statusMeta = MILESTONE_STATUS_LABELS[m.status] || { text: "Unknown", css: "bg-slate-500/10 text-slate-400", dot: "bg-slate-500" };
-              const isApproved = m.status === 3 || m.status === "Approved";
-              const isDelivered = m.status === 1 || m.status === "Delivered";
-              const isPendingOrRedeliver = m.status === 0 || m.status === "Pending" || m.status === 2 || m.status === "Revoked" || m.status === 4 || m.status === "Rejected";
+              // Backend enum: Pending=0, Delivered=1, Revoked=2, Approved=3, Rejected=4, Funded=5, UnderRevision=6
+              const isApproved = m.status === "Approved" || m.status === 3;
+              const isFunded = m.status === "Funded" || m.status === 5;
+              const isDelivered = m.status === "Delivered" || m.status === 1;
+              const isPending = m.status === "Pending" || m.status === 0;
+              const isUnderRevision = m.status === "UnderRevision" || m.status === 6;
+              const isRevoked = m.status === "Revoked" || m.status === 2;
 
               return (
                 <div
@@ -386,6 +488,10 @@ Are you sure you want to proceed?`;
                       ? "bg-[#091510]/30 border-emerald-500/20"
                       : isDelivered
                       ? "bg-[#16130b]/20 border-amber-500/20"
+                      : isFunded
+                      ? "bg-[#0b1020]/30 border-blue-500/20"
+                      : isUnderRevision
+                      ? "bg-[#1b120c]/20 border-orange-500/20"
                       : "bg-[#0a0f1d] border-marketplace-border"
                   }`}
                 >
@@ -416,11 +522,27 @@ Are you sure you want to proceed?`;
                           Approved on {new Date(m.approvedAt).toLocaleDateString()}
                         </span>
                       )}
+                      {m.isFunded && m.fundedAt && (
+                        <span className="text-[10px] text-blue-400 font-semibold flex items-center gap-1">
+                          <ShieldCheck className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                          Funded on {new Date(m.fundedAt).toLocaleDateString()}
+                        </span>
+                      )}
                       {isDelivered && m.deliveredAt && (
                         <span className="text-[10px] text-amber-500 font-semibold flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" />
                           Delivered on {new Date(m.deliveredAt).toLocaleDateString()}
                         </span>
+                      )}
+                      {/* Revision feedback note */}
+                      {isUnderRevision && m.revisionNote && (
+                        <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-3.5 mt-2 flex items-start gap-2 max-w-lg">
+                          <AlertCircle className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-orange-400 block">Revision Request Feedback</span>
+                            <p className="text-xs text-slate-300 font-medium leading-relaxed">{m.revisionNote}</p>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -434,8 +556,25 @@ Are you sure you want to proceed?`;
 
                     {/* Conditional Action Buttons */}
                     <div className="flex items-center gap-2">
-                      {/* Freelancer actions: Deliver Pending */}
-                      {isFreelancer && isPendingOrRedeliver && (
+                      {/* Freelancer actions: Deliver Pending (disabled, waiting for fund) */}
+                      {isFreelancer && isPending && (
+                        <div className="flex flex-col items-end gap-1">
+                          <button
+                            disabled={true}
+                            title="Waiting for the client to fund this milestone."
+                            className="bg-slate-700/30 text-slate-500 border border-slate-700/50 font-bold text-[10px] uppercase tracking-wider px-3.5 py-2 rounded-lg flex items-center gap-1 cursor-not-allowed opacity-50"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                            Deliver Work
+                          </button>
+                          <span className="text-[9px] text-amber-500 font-bold max-w-[150px] text-right leading-tight">
+                            Waiting for client funding
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Freelancer actions: Deliver Funded/UnderRevision/Revoked */}
+                      {isFreelancer && (isFunded || isUnderRevision || isRevoked) && (
                         <button
                           onClick={() => handleOpenDeliveryModal(m)}
                           className="bg-marketplace-primary hover:bg-marketplace-primary/95 text-white font-bold text-[10px] uppercase tracking-wider px-3.5 py-2 rounded-lg flex items-center gap-1 transition-transform active:scale-95 duration-100 cursor-pointer"
@@ -457,6 +596,18 @@ Are you sure you want to proceed?`;
                         </button>
                       )}
 
+                      {/* Client actions: Fund Milestone */}
+                      {isClient && isPending && (
+                        <button
+                          disabled={actionLoading === `fund-${m.id}`}
+                          onClick={() => handleFundMilestone(m.id, m.title, m.amount)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wider px-3.5 py-2 rounded-lg flex items-center gap-1 transition-transform active:scale-95 duration-100 disabled:opacity-50 cursor-pointer"
+                        >
+                          <DollarSign className="w-3.5 h-3.5" />
+                          Fund Milestone
+                        </button>
+                      )}
+
                       {/* Client actions: Review & Approve */}
                       {isClient && isDelivered && (
                         <div className="flex items-center gap-2 flex-wrap">
@@ -469,6 +620,14 @@ Are you sure you want to proceed?`;
                               Preview Asset
                             </Link>
                           )}
+                          <button
+                            disabled={actionLoading === `revision-${m.id}`}
+                            onClick={() => handleOpenRevisionModal(m)}
+                            className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 font-bold text-[10px] uppercase tracking-wider px-3.5 py-2 rounded-lg flex items-center gap-1 transition-transform active:scale-95 duration-100 disabled:opacity-50 cursor-pointer"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            Request Revision
+                          </button>
                           <button
                             disabled={actionLoading === `approve-${m.id}`}
                             onClick={() => handleApproveMilestone(m.id, m.title, m.amount)}
@@ -490,6 +649,28 @@ Are you sure you want to proceed?`;
 
         {/* Right Side: Parties details */}
         <div className="space-y-6">
+
+          {/* Wallet Balance Card */}
+          {walletBalance !== null && (
+            <div className="bg-[#0a0f1d] border border-marketplace-border rounded-3xl p-6 space-y-4">
+              <div className="flex justify-between items-center border-b border-marketplace-border pb-3">
+                <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <DollarSign className="w-4.5 h-4.5 text-marketplace-primary animate-pulse" />
+                  Wallet Balance
+                </h2>
+                <Link
+                  href="/wallet"
+                  className="text-[10px] font-bold text-marketplace-primary hover:underline uppercase tracking-wider"
+                >
+                  Top Up
+                </Link>
+              </div>
+              <div className="flex items-baseline justify-between">
+                <span className="text-xs text-slate-500 font-semibold">Your Wallet Balance</span>
+                <span className="text-2xl font-black text-white">${walletBalance.toFixed(2)}</span>
+              </div>
+            </div>
+          )}
           
           {/* Members Card */}
           <div className="bg-[#0a0f1d] border border-marketplace-border rounded-3xl p-6 space-y-6">
@@ -650,6 +831,77 @@ Are you sure you want to proceed?`;
                   ) : (
                     <>
                       Submit Delivery
+                      <Send className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Request Revision Modal ── */}
+      {revisionModalMilestone && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
+          <div className="bg-[#0a0f1d] border border-marketplace-border w-full max-w-md rounded-3xl p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+            <button
+              onClick={handleCloseRevisionModal}
+              className="absolute top-4 right-4 p-1 text-slate-500 hover:text-white transition-colors"
+            >
+              <X className="w-4.5 h-4.5" />
+            </button>
+
+            <div className="space-y-1.5 border-b border-marketplace-border pb-4 mb-5">
+              <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                <RefreshCw className="w-5 h-5 text-orange-400" />
+                Request Revision
+              </h3>
+              <p className="text-[11px] text-slate-400 font-semibold leading-relaxed">
+                Provide instructions or notes on required changes for: <strong className="text-white">"{revisionModalMilestone.title}"</strong>
+              </p>
+            </div>
+
+            {revisionError && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2.5 mb-4">
+                <AlertCircle className="w-4 h-4" />
+                <span>{revisionError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmitRevision} className="space-y-5">
+              {/* Revision Notes */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Revision Instructions</label>
+                <textarea
+                  required
+                  rows={4}
+                  value={revisionNote}
+                  onChange={(e) => setRevisionNote(e.target.value)}
+                  placeholder="Explain what changes are needed before this milestone can be approved..."
+                  className="w-full bg-[#121826]/80 border border-marketplace-border focus:border-marketplace-primary/40 rounded-xl px-4.5 py-3 text-xs text-white font-semibold focus:outline-none resize-none"
+                />
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleCloseRevisionModal}
+                  className="flex-1 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-xl transition-all cursor-pointer text-center"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading !== null}
+                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-xl flex items-center justify-center gap-1.5 shadow-lg disabled:opacity-50 transition-transform active:scale-95 duration-100 cursor-pointer"
+                >
+                  {actionLoading === "revising" ? (
+                    <Loader2 className="w-4.5 h-4.5 animate-spin" />
+                  ) : (
+                    <>
+                      Send Request
                       <Send className="w-4 h-4" />
                     </>
                   )}

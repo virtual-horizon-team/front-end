@@ -12,7 +12,7 @@ import {
 interface ContractMilestoneDto {
   id: string;
   title: string;
-  status: string | number; // 0 = Pending, 1 = Delivered, 2 = Approved
+  status: string | number;
 }
 
 interface JobContractDto {
@@ -134,7 +134,7 @@ export default function MyContractsPage() {
 
             // Count approved milestones
             const approvedMilestones = contract.milestones?.filter(
-              (m) => m.status === 2 || m.status === "Approved"
+              (m) => m.status === "Approved" || m.status === 3 || m.status === 4 || m.status === 2
             ).length || 0;
             const totalMilestones = contract.milestones?.length || 0;
 

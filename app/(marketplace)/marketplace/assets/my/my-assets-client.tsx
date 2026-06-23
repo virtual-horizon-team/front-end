@@ -376,71 +376,73 @@ export default function MyAssetsClient({ session }: { session: SessionData }) {
         })}
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col gap-3 mb-8">
-        {/* Row 1: Search + Type */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-grow">
-            <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by file name or description..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-marketplace-soft border border-marketplace-border rounded-xl pl-11 pr-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-marketplace-primary transition-colors"
-            />
-          </div>
+      {/* Filter and Search Bar — hidden on Preview tab */}
+      {activeTab !== "Preview" && (
+        <div className="flex flex-col gap-3 mb-8">
+          {/* Row 1: Search + Type */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-grow">
+              <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search by file name or description..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-marketplace-soft border border-marketplace-border rounded-xl pl-11 pr-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-marketplace-primary transition-colors"
+              />
+            </div>
 
-          <div className="flex items-center gap-2 bg-marketplace-soft border border-marketplace-border rounded-xl px-4 py-3 shrink-0">
-            <Filter className="w-4 h-4 text-slate-400" />
-            <select
-              value={typeFilter}
-              onChange={e => setTypeFilter(e.target.value)}
-              className="bg-transparent text-sm text-slate-300 focus:outline-none cursor-pointer font-medium"
-            >
-              <option value="All" className="bg-[#0f172a]">All Types</option>
-              {Object.entries(ASSET_TYPES).map(([val, label]) => (
-                <option key={val} value={val} className="bg-[#0f172a]">
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Row 2: Store listing filter pills */}
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0">
-            Store Status:
-          </span>
-          <div className="flex gap-1.5">
-            {([
-              { value: "all",      label: "All",      icon: <Layers className="w-3 h-3" /> },
-              { value: "listed",   label: "Listed",   icon: <Globe className="w-3 h-3" /> },
-              { value: "unlisted", label: "Unlisted", icon: <EyeOff className="w-3 h-3" /> }
-            ] as const).map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => setListingFilter(opt.value)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
-                  listingFilter === opt.value
-                    ? opt.value === "listed"
-                      ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
-                      : opt.value === "unlisted"
-                        ? "bg-amber-500/15 border-amber-500/30 text-amber-400"
-                        : "bg-marketplace-primary/15 border-marketplace-primary/30 text-marketplace-primary"
-                    : "bg-marketplace-soft border-marketplace-border text-slate-400 hover:text-slate-200 hover:border-slate-600"
-                }`}
+            <div className="flex items-center gap-2 bg-marketplace-soft border border-marketplace-border rounded-xl px-4 py-3 shrink-0">
+              <Filter className="w-4 h-4 text-slate-400" />
+              <select
+                value={typeFilter}
+                onChange={e => setTypeFilter(e.target.value)}
+                className="bg-transparent text-sm text-slate-300 focus:outline-none cursor-pointer font-medium"
               >
-                {opt.icon}
-                {opt.label}
-              </button>
-            ))}
+                <option value="All" className="bg-[#0f172a]">All Types</option>
+                {Object.entries(ASSET_TYPES).map(([val, label]) => (
+                  <option key={val} value={val} className="bg-[#0f172a]">
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Row 2: Store listing filter pills */}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0">
+              Store Status:
+            </span>
+            <div className="flex gap-1.5">
+              {([
+                { value: "all",      label: "All",      icon: <Layers className="w-3 h-3" /> },
+                { value: "listed",   label: "Listed",   icon: <Globe className="w-3 h-3" /> },
+                { value: "unlisted", label: "Unlisted", icon: <EyeOff className="w-3 h-3" /> }
+              ] as const).map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setListingFilter(opt.value)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
+                    listingFilter === opt.value
+                      ? opt.value === "listed"
+                        ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+                        : opt.value === "unlisted"
+                          ? "bg-amber-500/15 border-amber-500/30 text-amber-400"
+                          : "bg-marketplace-primary/15 border-marketplace-primary/30 text-marketplace-primary"
+                      : "bg-marketplace-soft border-marketplace-border text-slate-400 hover:text-slate-200 hover:border-slate-600"
+                  }`}
+                >
+                  {opt.icon}
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Main Grid display */}
+      {/* Main Grid display — only for non-Preview tabs */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 text-slate-400 gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-marketplace-primary" />
@@ -451,7 +453,7 @@ export default function MyAssetsClient({ session }: { session: SessionData }) {
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
           <p className="text-sm font-medium">{errorMsg}</p>
         </div>
-      ) : filteredAssets.length === 0 ? (
+      ) : activeTab !== "Preview" && filteredAssets.length === 0 ? (
         <div className="border border-dashed border-marketplace-border rounded-3xl py-20 px-6 text-center max-w-md mx-auto">
           <Box className="w-12 h-12 text-slate-600 mx-auto mb-4" />
           <h3 className="text-lg font-bold text-slate-200">No Assets Found</h3>
@@ -459,7 +461,7 @@ export default function MyAssetsClient({ session }: { session: SessionData }) {
             There are no assets under this filter. Upload a new asset to register your creator package in the sandbox.
           </p>
         </div>
-      ) : (
+      ) : activeTab !== "Preview" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredAssets.map(asset => {
             const isPurchased = purchasedAssetIds.has(asset.assetID);
@@ -556,7 +558,7 @@ export default function MyAssetsClient({ session }: { session: SessionData }) {
             );
           })}
         </div>
-      )}
+      ) : null}
 
       {/* Preview Assets Grid (shown only when Preview tab is active) */}
       {!loading && !errorMsg && activeTab === "Preview" && (

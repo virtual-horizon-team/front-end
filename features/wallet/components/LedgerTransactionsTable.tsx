@@ -31,7 +31,8 @@ export default function LedgerTransactionsTable({
             lowerType.includes("refund") ||
             lowerType.includes("share") ||
             lowerType.includes("topup") ||
-            lowerType.includes("charge")
+            lowerType.includes("charge") ||
+            lowerType.includes("release")
         );
     };
 
@@ -61,9 +62,21 @@ export default function LedgerTransactionsTable({
                 className: "bg-amber-50 text-amber-700 border-amber-200/60 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20",
             };
         }
-        if (lower.includes("refund")) {
+        if (lower.includes("milestoneescrow")) {
             return {
-                label: "Refund Credit",
+                label: "Milestone Escrow",
+                className: "bg-indigo-50 text-indigo-700 border-indigo-200/60 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20",
+            };
+        }
+        if (lower.includes("milestonerelease")) {
+            return {
+                label: "Milestone Release",
+                className: "bg-emerald-50 text-emerald-700 border-emerald-200/60 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20",
+            };
+        }
+        if (lower.includes("milestonerefund") || lower.includes("refund")) {
+            return {
+                label: lower.includes("milestonerefund") ? "Milestone Refund" : "Refund Credit",
                 className: "bg-purple-50 text-purple-700 border-purple-200/60 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20",
             };
         }
