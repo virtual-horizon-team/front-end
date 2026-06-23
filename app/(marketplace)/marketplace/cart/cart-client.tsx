@@ -92,12 +92,12 @@ export default function CartPageClient() {
     setError(null);
     try {
       const origin = window.location.origin;
-      const data = await api<{ data: { session: { redirectUrl: string } } }>("/api/Checkout", {
+      const data = await api<{ data: { session: { redirectUrl: string } } }>("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          successUrl: `${origin}/marketplace/cart/success`,
-          cancelUrl: `${origin}/marketplace/cart`,
+          success_url: `${origin}/marketplace/cart/success`,
+          cancel_url: `${origin}/marketplace/cart`,
           cart_type: "Asset"
         })
       });
