@@ -16,7 +16,14 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
+  async rewrites() {
+    return [
+      {
+        source: "/api/proxy/:path*",
+        destination: `${process.env.BACKEND_URL || "http://localhost:5199"}/:path*`,
+      },
+    ];
+  },
 };
-
 
 export default nextConfig;
